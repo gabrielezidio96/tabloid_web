@@ -11,3 +11,6 @@ wheels/
 
 # Node / Bun
 node_modules/
+
+# Local database
+db.sqlite3
