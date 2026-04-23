@@ -1,0 +1,37 @@
+{% load l10n %}
+{% if featured %}
+{% for item in featured %}
+{% with s=item.snapshot p=item.snapshot.product %}
+<a href="{{ p.product_url }}" target="_blank" rel="noopener noreferrer"
+   class="swiper-slide !w-[200px] sm:!w-[300px] no-underline text-inherit">
+  <article class="bg-white rounded-lg border border-neutral-200 overflow-hidden flex flex-col h-full transition-shadow hover:shadow-md">
+    {% if p.image_url %}
+    <img class="w-full aspect-square object-contain p-2 bg-neutral-50" src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+    {% else %}
+    <div class="w-full aspect-square bg-neutral-100 flex items-center justify-center text-neutral-300 text-[2rem]">🛒</div>
+    {% endif %}
+    <div class="p-3 flex-1 flex flex-col gap-1">
+      <span class="text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-400">{{ p.store.name }}</span>
+      <span class="text-sm font-medium leading-tight text-neutral-900 flex-1">{{ p.name }}</span>
+      {% if p.brand %}<span class="text-xs text-neutral-400">{{ p.brand.name }}</span>{% endif %}
+      <div class="mt-2 flex items-baseline gap-1.5 flex-wrap">
+        {% if s.sale_price %}
+        <span class="text-xs text-neutral-400 line-through">R${{ s.regular_price|localize }}</span>
+        <span class="text-base font-bold text-brand">R${{ s.sale_price|localize }}</span>
+        {% else %}
+        <span class="text-base font-bold text-neutral-900">R${{ s.regular_price|localize }}</span>
+        {% endif %}
+        {% if s.discount_pct %}
+        <span class="ml-auto inline-block bg-brand text-white text-[0.7rem] font-bold px-1.5 py-0.5 rounded">-{{ s.discount_pct|floatformat:0 }}%</span>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+</a>
+{% endwith %}
+{% endfor %}
+{% else %}
+<div class="swiper-slide px-4 py-16 text-neutral-400 text-sm whitespace-nowrap">
+  <p>Sem produtos em destaque para hoje.</p>
+</div>
+{% endif %}

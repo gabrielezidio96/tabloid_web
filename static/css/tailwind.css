@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@source "../../templates";
+@source "../../deals/templates";
+
+@theme {
+  --color-brand: #e63946;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}

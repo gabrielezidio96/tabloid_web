@@ -1,0 +1,12 @@
+{
+  "name": "tabloid-web",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss --input static/css/tailwind.css --output static/css/output.css --minify",
+    "watch:css": "tailwindcss --input static/css/tailwind.css --output static/css/output.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.4",
+    "tailwindcss": "^4.2.4"
+  }
+}

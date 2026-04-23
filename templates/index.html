@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+{{ cities_by_state|json_script:"cities-by-state-data" }}
+{% endblock %}
+
+{% block header_controls %}
+<form id="location-filter-form" method="get" class="flex flex-wrap items-center gap-2">
+  {% if selected_store %}
+  <input type="hidden" name="store" value="{{ selected_store }}">
+  {% endif %}
+  <label class="flex items-center gap-2 text-sm text-neutral-600">
+    <span>Estado</span>
+    <select id="state-selector" name="state"
+      class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm">
+      <option value="">Todos os estados</option>
+      {% for option in states %}
+      <option value="{{ option }}" {% if option == selected_state %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="flex items-center gap-2 text-sm text-neutral-600">
+    <span>Cidade</span>
+    <select id="city-selector" name="city" {% if not selected_state %}disabled{% endif %}
+      class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm">
+      <option value="">{% if selected_state %}Todas as cidades{% else %}Selecione um estado{% endif %}</option>
+      {% for option in cities %}
+      <option value="{{ option }}" {% if option == selected_city %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="button" id="use-my-location"
+    class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm cursor-pointer transition-colors hover:border-brand hover:text-brand disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1"
+    data-geolocate-url="{% url 'geolocate' %}">
+    <span aria-hidden="true">&#128205;</span>
+    <span data-role="label">Usar minha localiza&ccedil;&atilde;o</span>
+  </button>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap gap-2 mb-6 items-center">
+  <span class="text-sm text-neutral-500">Lojas:</span>
+
+  <button
+    class="border px-[0.9rem] py-[0.4rem] rounded-full text-sm cursor-pointer transition-all {% if not selected_store %}bg-brand border-brand text-white{% else %}border-neutral-300 bg-white text-neutral-700 hover:border-brand hover:text-brand{% endif %}"
+    hx-get="{% url 'deals:product-grid' %}{% if selected_state or selected_city %}?{% endif %}{% if selected_state %}state={{ selected_state|urlencode }}{% endif %}{% if selected_state and selected_city %}&{% endif %}{% if selected_city %}city={{ selected_city|urlencode }}{% endif %}"
+    hx-target="#product-grid" hx-push-url="true" hx-indicator="#spinner">
+    Todas as lojas
+  </button>
+
+  {% for store in stores %}
+  <button
+    class="border px-[0.9rem] py-[0.4rem] rounded-full text-sm cursor-pointer transition-all {% if selected_store == store.slug %}bg-brand border-brand text-white{% else %}border-neutral-300 bg-white text-neutral-700 hover:border-brand hover:text-brand{% endif %}"
+    hx-get="{% url 'deals:product-grid' %}?store={{ store.slug }}{% if selected_state %}&state={{ selected_state|urlencode }}{% endif %}{% if selected_city %}&city={{ selected_city|urlencode }}{% endif %}"
+    hx-target="#product-grid" hx-push-url="true" hx-indicator="#spinner">
+    {{ store.name }}
+  </button>
+  {% endfor %}
+
+  <span
+    class="htmx-indicator inline-block w-4 h-4 border-2 border-neutral-200 border-t-brand rounded-full animate-spin align-middle ml-2"
+    id="spinner"></span>
+  <span class="ml-auto text-[0.8rem] text-neutral-400">{{ today|date:"d \d\e F \d\e Y" }}</span>
+</div>
+
+<div class="flex items-center gap-2">
+  <button id="swiper-prev"
+    class="shrink-0 w-9 h-9 rounded-full border border-neutral-300 bg-white cursor-pointer text-base flex items-center justify-center transition-colors hover:border-brand hover:text-brand text-neutral-700"
+    aria-label="Anterior">&#8592;</button>
+  <div id="product-swiper" class="swiper flex-1 min-w-0">
+    <div id="product-grid" class="swiper-wrapper">
+      {% include "deals/partials/product_grid.html" %}
+    </div>
+  </div>
+  <button id="swiper-next"
+    class="shrink-0 w-9 h-9 rounded-full border border-neutral-300 bg-white cursor-pointer text-base flex items-center justify-center transition-colors hover:border-brand hover:text-brand text-neutral-700"
+    aria-label="Próximo">&#8594;</button>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    var stateSelect = document.getElementById("state-selector");
+    var citySelect = document.getElementById("city-selector");
+    var form = document.getElementById("location-filter-form");
+    var dataElement = document.getElementById("cities-by-state-data");
+    if (!stateSelect || !citySelect || !form || !dataElement) {
+      return;
+    }
+
+    var citiesByState = JSON.parse(dataElement.textContent || "{}");
+    var maxAge = 60 * 60 * 24 * 30;
+    function setCookie(name, value) {
+      document.cookie = name + "=" + encodeURIComponent(value || "") + "; path=/; max-age=" + maxAge + "; samesite=lax";
+    }
+
+    function buildCityOptions(selectedCity) {
+      var placeholder = stateSelect.value ? "Todas as cidades" : "Selecione um estado";
+      var selectedState = stateSelect.value;
+      var validCities = selectedState ? (citiesByState[selectedState] || []) : [];
+
+      citySelect.disabled = !selectedState;
+      citySelect.innerHTML = "";
+
+      var emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = placeholder;
+      citySelect.appendChild(emptyOption);
+
+      validCities.forEach(function (city) {
+        var option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+
+      if (selectedCity && validCities.indexOf(selectedCity) >= 0) {
+        citySelect.value = selectedCity;
+      } else {
+        citySelect.value = "";
+      }
+    }
+
+    buildCityOptions(citySelect.value);
+
+    stateSelect.addEventListener("change", function () {
+      buildCityOptions("");
+      setCookie("deals_state", stateSelect.value);
+      setCookie("deals_city", citySelect.value);
+    });
+
+    citySelect.addEventListener("change", function () {
+      setCookie("deals_city", citySelect.value);
+      if (citySelect.value) {
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener("submit", function () {
+      setCookie("deals_state", stateSelect.value);
+      setCookie("deals_city", citySelect.value);
+    });
+
+    var locationBtn = document.getElementById("use-my-location");
+    if (locationBtn && "geolocation" in navigator) {
+      var label = locationBtn.querySelector('[data-role="label"]');
+      var defaultLabel = label.textContent;
+
+      function setLabel(text, disabled) {
+        label.textContent = text;
+        locationBtn.disabled = !!disabled;
+      }
+
+      function resetLabelSoon(text) {
+        setLabel(text, false);
+        setTimeout(function () { label.textContent = defaultLabel; }, 3000);
+      }
+
+      locationBtn.addEventListener("click", function () {
+        setLabel("Obtendo localização…", true);
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            var params = new URLSearchParams({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            fetch(locationBtn.dataset.geolocateUrl + "?" + params.toString())
+              .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+              .then(function (data) {
+                if (!data.state) {
+                  resetLabelSoon("Nenhuma loja próxima");
+                  return;
+                }
+                stateSelect.value = data.state;
+                buildCityOptions(data.city || "");
+                setCookie("deals_state", data.state);
+                setCookie("deals_city", data.city || "");
+                form.requestSubmit();
+              })
+              .catch(function () {
+                resetLabelSoon("Erro ao buscar");
+              });
+          },
+          function (error) {
+            if (error.code === error.PERMISSION_DENIED) {
+              resetLabelSoon("Permissão negada");
+            } else {
+              resetLabelSoon("Localização indisponível");
+            }
+          },
+          { timeout: 10000, maximumAge: 60000 }
+        );
+      });
+    }
+  })();
+
+  var productSwiper;
+
+  function initSwiper() {
+    if (productSwiper) productSwiper.destroy(true, true);
+    productSwiper = new Swiper('#product-swiper', {
+      slidesPerView: 'auto',
+      spaceBetween: 16,
+      navigation: {
+        prevEl: '#swiper-prev',
+        nextEl: '#swiper-next',
+      },
+    });
+  }
+
+  initSwiper();
+
+  document.addEventListener('htmx:afterSwap', function (e) {
+    if (e.detail.target.id === 'product-grid') initSwiper();
+  });
+</script>
+{% endblock %}
