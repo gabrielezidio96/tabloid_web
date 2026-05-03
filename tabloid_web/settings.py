@@ -10,10 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'catalog',
     'deals',
     'stores',
@@ -65,6 +71,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'deals.context_processors.cart',
+                'deals.context_processors.notifications',
+                'deals.context_processors.location',
             ],
         },
     },
@@ -78,12 +87,14 @@ WSGI_APPLICATION = 'tabloid_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.spatialite',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
     }
 }
-
-SPATIALITE_LIBRARY_PATH = 'mod_spatialite'
 
 
 # Password validation
@@ -130,6 +141,41 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ---------------------------------------------------------------------------
+# Supabase Storage (S3-compatible)
+# ---------------------------------------------------------------------------
+# Set SUPABASE_STORAGE_BUCKET_NAME in .env to enable cloud media storage.
+# Leave it unset (or empty) to fall back to local filesystem storage.
+# ---------------------------------------------------------------------------
+_SUPABASE_BUCKET = os.environ.get('SUPABASE_STORAGE_BUCKET_NAME', '')
+
+if _SUPABASE_BUCKET:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'OPTIONS': {
+                'bucket_name': _SUPABASE_BUCKET,
+                'access_key': os.environ['SUPABASE_STORAGE_ACCESS_KEY_ID'],
+                'secret_key': os.environ['SUPABASE_STORAGE_SECRET_ACCESS_KEY'],
+                'region_name': os.environ.get('SUPABASE_STORAGE_REGION', 'sa-east-1'),
+                'endpoint_url': os.environ['SUPABASE_STORAGE_ENDPOINT_URL'],
+                # Supabase Storage uses path-style URLs (not virtual-hosted)
+                'addressing_style': 'path',
+                # Files are publicly readable via Supabase policies;
+                # don't generate pre-signed URLs.
+                'querystring_auth': False,
+                # Where inside the bucket to place uploads
+                'location': 'media',
+                # Custom domain so public URLs look like:
+                # https://<project>.supabase.co/storage/v1/object/public/<bucket>/media/<file>
+                'custom_domain': os.environ.get('SUPABASE_STORAGE_CUSTOM_DOMAIN', ''),
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

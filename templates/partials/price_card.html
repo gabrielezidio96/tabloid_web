@@ -1,0 +1,31 @@
+{% load l10n %}
+{# Args: snapshot — has regular_price, sale_price, price_app, price_credit_card_club #}
+{% with has_discount=snapshot.sale_price has_app=snapshot.price_app has_club=snapshot.price_credit_card_club %}
+<div class="flex flex-col gap-1">
+  {% if snapshot.regular_price is not None %}
+  <span class="{% if has_discount or has_app or has_club %}text-xs text-gray-400 line-through{% else %}text-sm font-bold text-gray-900{% endif %}">
+    R$ {{ snapshot.regular_price|localize }}
+  </span>
+  {% endif %}
+  <div class="flex flex-wrap gap-1">
+    {% if snapshot.sale_price %}
+    <span class="inline-flex items-stretch overflow-hidden rounded-md border border-gray-100">
+      <span class="bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">Oferta</span>
+      <span class="bg-white px-1.5 py-0.5 text-xs font-bold text-gray-800">R$ {{ snapshot.sale_price|localize }}</span>
+    </span>
+    {% endif %}
+    {% if snapshot.price_app %}
+    <span class="inline-flex items-stretch overflow-hidden rounded-md border border-gray-100">
+      <span class="bg-orange-500 px-1.5 py-0.5 text-xs font-bold text-white">App</span>
+      <span class="bg-white px-1.5 py-0.5 text-xs font-bold text-gray-800">R$ {{ snapshot.price_app|localize }}</span>
+    </span>
+    {% endif %}
+    {% if snapshot.price_credit_card_club %}
+    <span class="inline-flex items-stretch overflow-hidden rounded-md border border-gray-100">
+      <span class="bg-blue-500 px-1.5 py-0.5 text-xs font-bold text-white">Clube</span>
+      <span class="bg-white px-1.5 py-0.5 text-xs font-bold text-gray-800">R$ {{ snapshot.price_credit_card_club|localize }}</span>
+    </span>
+    {% endif %}
+  </div>
+</div>
+{% endwith %}

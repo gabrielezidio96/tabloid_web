@@ -11,6 +11,7 @@ class Category(models.Model):
         on_delete=models.SET_NULL,
         related_name="children",
     )
+    image_url = models.URLField(blank=True)
 
     class Meta:
         verbose_name_plural = "categories"
@@ -33,6 +34,13 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
+    class UnitType(models.TextChoices):
+        UNIT = "unit", "un"
+        KG = "kg", "kg"
+        G = "g", "g"
+        L = "l", "L"
+        ML = "ml", "mL"
+
     store = models.ForeignKey(
         "stores.Store",
         on_delete=models.CASCADE,
@@ -57,7 +65,14 @@ class Product(models.Model):
     store_product_id = models.CharField(max_length=100, blank=True)
     product_url = models.URLField(blank=True)
     image_url = models.URLField(blank=True)
+    thumb_image_url = models.URLField(blank=True)
     unit = models.CharField(max_length=30, blank=True)
+    unit_type = models.CharField(
+        max_length=10,
+        choices=UnitType.choices,
+        blank=True,
+    )
+    limited_unit = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -82,6 +97,11 @@ class PriceSnapshot(models.Model):
     regular_price = models.DecimalField(max_digits=10, decimal_places=2)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price_app = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price_credit_card_club = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    currency = models.CharField(max_length=3, default="BRL")
 
     discount_pct = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True

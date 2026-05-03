@@ -1,0 +1,17 @@
+{# Args: n, icon, icon_color, bg_color #}
+<form method="post" action="{% url 'deals:notification-mark' n.pk %}" class="block mx-5 mb-3">
+  {% csrf_token %}
+  <button type="submit" class="w-full text-left bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3 cursor-pointer">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0" style="background-color: {{ bg_color }}; color: {{ icon_color }};">{{ icon }}</div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-bold text-gray-900 truncate">{{ n.title }}</span>
+        <span class="text-xs text-gray-400 shrink-0">{{ n.created_at|timesince }}</span>
+      </div>
+      <span class="block text-xs text-gray-500 leading-relaxed line-clamp-2 mt-0.5">{{ n.message }}</span>
+    </div>
+    {% if not n.read %}
+    <div class="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0"></div>
+    {% endif %}
+  </button>
+</form>

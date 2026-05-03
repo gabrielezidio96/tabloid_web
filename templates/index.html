@@ -1,220 +1,74 @@
 {% extends "base.html" %}
-
-{% block extra_head %}
-{{ cities_by_state|json_script:"cities-by-state-data" }}
-{% endblock %}
-
-{% block header_controls %}
-<form id="location-filter-form" method="get" class="flex flex-wrap items-center gap-2">
-  {% if selected_store %}
-  <input type="hidden" name="store" value="{{ selected_store }}">
-  {% endif %}
-  <label class="flex items-center gap-2 text-sm text-neutral-600">
-    <span>Estado</span>
-    <select id="state-selector" name="state"
-      class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm">
-      <option value="">Todos os estados</option>
-      {% for option in states %}
-      <option value="{{ option }}" {% if option == selected_state %}selected{% endif %}>{{ option }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  <label class="flex items-center gap-2 text-sm text-neutral-600">
-    <span>Cidade</span>
-    <select id="city-selector" name="city" {% if not selected_state %}disabled{% endif %}
-      class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm">
-      <option value="">{% if selected_state %}Todas as cidades{% else %}Selecione um estado{% endif %}</option>
-      {% for option in cities %}
-      <option value="{{ option }}" {% if option == selected_city %}selected{% endif %}>{{ option }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  <button type="button" id="use-my-location"
-    class="border border-neutral-300 bg-white text-neutral-700 rounded-full px-3 py-1.5 text-sm cursor-pointer transition-colors hover:border-brand hover:text-brand disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1"
-    data-geolocate-url="{% url 'geolocate' %}">
-    <span aria-hidden="true">&#128205;</span>
-    <span data-role="label">Usar minha localiza&ccedil;&atilde;o</span>
-  </button>
-</form>
-{% endblock %}
+{% load l10n %}
 
 {% block content %}
-<div class="flex flex-wrap gap-2 mb-6 items-center">
-  <span class="text-sm text-neutral-500">Lojas:</span>
-
-  <button
-    class="border px-[0.9rem] py-[0.4rem] rounded-full text-sm cursor-pointer transition-all {% if not selected_store %}bg-brand border-brand text-white{% else %}border-neutral-300 bg-white text-neutral-700 hover:border-brand hover:text-brand{% endif %}"
-    hx-get="{% url 'deals:product-grid' %}{% if selected_state or selected_city %}?{% endif %}{% if selected_state %}state={{ selected_state|urlencode }}{% endif %}{% if selected_state and selected_city %}&{% endif %}{% if selected_city %}city={{ selected_city|urlencode }}{% endif %}"
-    hx-target="#product-grid" hx-push-url="true" hx-indicator="#spinner">
-    Todas as lojas
-  </button>
-
-  {% for store in stores %}
-  <button
-    class="border px-[0.9rem] py-[0.4rem] rounded-full text-sm cursor-pointer transition-all {% if selected_store == store.slug %}bg-brand border-brand text-white{% else %}border-neutral-300 bg-white text-neutral-700 hover:border-brand hover:text-brand{% endif %}"
-    hx-get="{% url 'deals:product-grid' %}?store={{ store.slug }}{% if selected_state %}&state={{ selected_state|urlencode }}{% endif %}{% if selected_city %}&city={{ selected_city|urlencode }}{% endif %}"
-    hx-target="#product-grid" hx-push-url="true" hx-indicator="#spinner">
-    {{ store.name }}
-  </button>
-  {% endfor %}
-
-  <span
-    class="htmx-indicator inline-block w-4 h-4 border-2 border-neutral-200 border-t-brand rounded-full animate-spin align-middle ml-2"
-    id="spinner"></span>
-  <span class="ml-auto text-[0.8rem] text-neutral-400">{{ today|date:"d \d\e F \d\e Y" }}</span>
-</div>
-
-<div class="flex items-center gap-2">
-  <button id="swiper-prev"
-    class="shrink-0 w-9 h-9 rounded-full border border-neutral-300 bg-white cursor-pointer text-base flex items-center justify-center transition-colors hover:border-brand hover:text-brand text-neutral-700"
-    aria-label="Anterior">&#8592;</button>
-  <div id="product-swiper" class="swiper flex-1 min-w-0">
-    <div id="product-grid" class="swiper-wrapper">
-      {% include "deals/partials/product_grid.html" %}
-    </div>
+<section class="mb-5">
+  <div class="flex items-center justify-between px-4 mb-3">
+    <h2 class="text-sm font-bold text-gray-900">Lojas</h2>
+    <span class="text-xs text-gray-400">{{ today|date:"d \\d\\e F" }}</span>
   </div>
-  <button id="swiper-next"
-    class="shrink-0 w-9 h-9 rounded-full border border-neutral-300 bg-white cursor-pointer text-base flex items-center justify-center transition-colors hover:border-brand hover:text-brand text-neutral-700"
-    aria-label="Próximo">&#8594;</button>
-</div>
 
-{% endblock %}
+  <div class="flex items-start overflow-x-auto pb-2 px-3 scrollbar-none">
+    {% for s in stores %}
+    {% url 'deals:store-detail' s.slug as store_href %}
+    {% include "partials/store_card.html" with store=s selected=False href=store_href %}
+    {% endfor %}
+  </div>
+</section>
 
-{% block extra_scripts %}
-<script>
-  (function () {
-    var stateSelect = document.getElementById("state-selector");
-    var citySelect = document.getElementById("city-selector");
-    var form = document.getElementById("location-filter-form");
-    var dataElement = document.getElementById("cities-by-state-data");
-    if (!stateSelect || !citySelect || !form || !dataElement) {
-      return;
-    }
+<div class="h-px bg-gray-200 mx-4 mb-5"></div>
 
-    var citiesByState = JSON.parse(dataElement.textContent || "{}");
-    var maxAge = 60 * 60 * 24 * 30;
-    function setCookie(name, value) {
-      document.cookie = name + "=" + encodeURIComponent(value || "") + "; path=/; max-age=" + maxAge + "; samesite=lax";
-    }
+<section class="mb-4">
+  <div class="flex items-center justify-between px-4 mb-3">
+    <h2 class="text-sm font-bold text-gray-900">Ofertas</h2>
+  </div>
+  <div class="flex px-4 gap-2 mb-4 overflow-x-auto scrollbar-none">
+    <button
+      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-gray-900 text-white text-xs font-bold">
+      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+          clip-rule="evenodd" />
+      </svg>
+      Destaques
+    </button>
+    <button
+      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path stroke-linecap="round" d="M12 6v6l4 2" />
+      </svg>
+      Recentes
+    </button>
+    <button
+      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
+      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+          clip-rule="evenodd" />
+      </svg>
+      Em alta
+    </button>
+    <button
+      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+      </svg>
+      Menor preço
+    </button>
+  </div>
 
-    function buildCityOptions(selectedCity) {
-      var placeholder = stateSelect.value ? "Todas as cidades" : "Selecione um estado";
-      var selectedState = stateSelect.value;
-      var validCities = selectedState ? (citiesByState[selectedState] || []) : [];
-
-      citySelect.disabled = !selectedState;
-      citySelect.innerHTML = "";
-
-      var emptyOption = document.createElement("option");
-      emptyOption.value = "";
-      emptyOption.textContent = placeholder;
-      citySelect.appendChild(emptyOption);
-
-      validCities.forEach(function (city) {
-        var option = document.createElement("option");
-        option.value = city;
-        option.textContent = city;
-        citySelect.appendChild(option);
-      });
-
-      if (selectedCity && validCities.indexOf(selectedCity) >= 0) {
-        citySelect.value = selectedCity;
-      } else {
-        citySelect.value = "";
-      }
-    }
-
-    buildCityOptions(citySelect.value);
-
-    stateSelect.addEventListener("change", function () {
-      buildCityOptions("");
-      setCookie("deals_state", stateSelect.value);
-      setCookie("deals_city", citySelect.value);
-    });
-
-    citySelect.addEventListener("change", function () {
-      setCookie("deals_city", citySelect.value);
-      if (citySelect.value) {
-        form.requestSubmit();
-      }
-    });
-
-    form.addEventListener("submit", function () {
-      setCookie("deals_state", stateSelect.value);
-      setCookie("deals_city", citySelect.value);
-    });
-
-    var locationBtn = document.getElementById("use-my-location");
-    if (locationBtn && "geolocation" in navigator) {
-      var label = locationBtn.querySelector('[data-role="label"]');
-      var defaultLabel = label.textContent;
-
-      function setLabel(text, disabled) {
-        label.textContent = text;
-        locationBtn.disabled = !!disabled;
-      }
-
-      function resetLabelSoon(text) {
-        setLabel(text, false);
-        setTimeout(function () { label.textContent = defaultLabel; }, 3000);
-      }
-
-      locationBtn.addEventListener("click", function () {
-        setLabel("Obtendo localização…", true);
-        navigator.geolocation.getCurrentPosition(
-          function (position) {
-            var params = new URLSearchParams({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
-            fetch(locationBtn.dataset.geolocateUrl + "?" + params.toString())
-              .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
-              .then(function (data) {
-                if (!data.state) {
-                  resetLabelSoon("Nenhuma loja próxima");
-                  return;
-                }
-                stateSelect.value = data.state;
-                buildCityOptions(data.city || "");
-                setCookie("deals_state", data.state);
-                setCookie("deals_city", data.city || "");
-                form.requestSubmit();
-              })
-              .catch(function () {
-                resetLabelSoon("Erro ao buscar");
-              });
-          },
-          function (error) {
-            if (error.code === error.PERMISSION_DENIED) {
-              resetLabelSoon("Permissão negada");
-            } else {
-              resetLabelSoon("Localização indisponível");
-            }
-          },
-          { timeout: 10000, maximumAge: 60000 }
-        );
-      });
-    }
-  })();
-
-  var productSwiper;
-
-  function initSwiper() {
-    if (productSwiper) productSwiper.destroy(true, true);
-    productSwiper = new Swiper('#product-swiper', {
-      slidesPerView: 'auto',
-      spaceBetween: 16,
-      navigation: {
-        prevEl: '#swiper-prev',
-        nextEl: '#swiper-next',
-      },
-    });
-  }
-
-  initSwiper();
-
-  document.addEventListener('htmx:afterSwap', function (e) {
-    if (e.detail.target.id === 'product-grid') initSwiper();
-  });
-</script>
+  {% if products %}
+  <div>
+    {% for product in products %}
+    {% with snapshot=product.today_snapshots.0 %}
+    {% url 'deals:product-detail' product.pk as detail_href %}
+    {% include "partials/product_card.html" with product=product snapshot=snapshot href=detail_href %}
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-400 text-sm px-4">Sem produtos disponíveis para os filtros selecionados.</p>
+  {% endif %}
+</section>
 {% endblock %}

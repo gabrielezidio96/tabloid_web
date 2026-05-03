@@ -2,29 +2,47 @@
 {% if featured %}
 {% for item in featured %}
 {% with s=item.snapshot p=item.snapshot.product %}
-<a href="{{ p.product_url }}" target="_blank" rel="noopener noreferrer"
-   class="swiper-slide !w-[200px] sm:!w-[300px] no-underline text-inherit">
-  <article class="bg-white rounded-lg border border-neutral-200 overflow-hidden flex flex-col h-full transition-shadow hover:shadow-md">
-    {% if p.image_url %}
-    <img class="w-full aspect-square object-contain p-2 bg-neutral-50" src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
-    {% else %}
-    <div class="w-full aspect-square bg-neutral-100 flex items-center justify-center text-neutral-300 text-[2rem]">🛒</div>
-    {% endif %}
-    <div class="p-3 flex-1 flex flex-col gap-1">
-      <span class="text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-400">{{ p.store.name }}</span>
-      <span class="text-sm font-medium leading-tight text-neutral-900 flex-1">{{ p.name }}</span>
-      {% if p.brand %}<span class="text-xs text-neutral-400">{{ p.brand.name }}</span>{% endif %}
-      <div class="mt-2 flex items-baseline gap-1.5 flex-wrap">
+<a href="{% url 'deals:product-detail' p.pk %}"
+   class="swiper-slide !w-[290px] sm:!w-[360px] no-underline text-inherit">
+  <article class="bg-white rounded-2xl border border-neutral-200 overflow-hidden h-full shadow-sm transition-shadow hover:shadow-md">
+    <div class="flex gap-3 p-3">
+      {% if p.image_url %}
+      <img class="w-24 h-24 rounded-xl object-cover bg-neutral-50" src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+      {% else %}
+      <div class="w-24 h-24 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-300 text-2xl">🛒</div>
+      {% endif %}
+      <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+        <div class="flex items-center gap-1 text-xs text-neutral-500">
+          <span class="truncate font-medium">{{ p.store.name }}</span>
+          <span class="text-blue-500">✓</span>
+        </div>
         {% if s.sale_price %}
-        <span class="text-xs text-neutral-400 line-through">R${{ s.regular_price|localize }}</span>
-        <span class="text-base font-bold text-brand">R${{ s.sale_price|localize }}</span>
+        <span class="self-start rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[0.68rem] font-semibold text-red-500">Oferta rel&acirc;mpago</span>
+        {% endif %}
+        <span class="text-sm font-semibold leading-snug text-neutral-900 line-clamp-3">{{ p.name }}</span>
+        {% if p.brand %}<span class="text-xs text-neutral-400">{{ p.brand.name }}</span>{% endif %}
+        <div class="mt-auto">
+          <span class="text-[0.68rem] text-neutral-400">A partir de</span>
+          <div class="flex items-baseline gap-1.5 flex-wrap">
+        {% if s.sale_price %}
+          <span class="text-base font-bold text-neutral-900">R$ {{ s.sale_price|localize }}</span>
+          <span class="text-xs text-neutral-400 line-through">R$ {{ s.regular_price|localize }}</span>
         {% else %}
-        <span class="text-base font-bold text-neutral-900">R${{ s.regular_price|localize }}</span>
+          <span class="text-base font-bold text-neutral-900">R$ {{ s.regular_price|localize }}</span>
         {% endif %}
-        {% if s.discount_pct %}
-        <span class="ml-auto inline-block bg-brand text-white text-[0.7rem] font-bold px-1.5 py-0.5 rounded">-{{ s.discount_pct|floatformat:0 }}%</span>
-        {% endif %}
+          </div>
+        </div>
       </div>
+    </div>
+    <div class="border-t border-neutral-100 px-3 py-2.5 flex items-center gap-2 text-xs text-neutral-500">
+      {% if s.discount_pct %}
+      <span class="inline-flex items-center gap-1 text-blue-500 font-semibold">🏷 {{ s.discount_pct|floatformat:0 }}%</span>
+      {% else %}
+      <span class="inline-flex items-center gap-1 text-blue-500 font-semibold">🏷 Oferta</span>
+      {% endif %}
+      <span class="text-neutral-300">|</span>
+      <span class="inline-flex items-center gap-1 text-neutral-400">💬 0</span>
+      <span class="ml-auto font-semibold text-neutral-600">Ver mais</span>
     </div>
   </article>
 </a>

@@ -4,7 +4,9 @@
 @source "../../deals/templates";
 
 @theme {
-  --color-brand: #e63946;
+  --color-brand: #ef4444;
+  --color-brand-soft: #fff5f5;
+  --color-cream: #faf8f5;
 }
 
 @utility scrollbar-none {
@@ -23,4 +25,36 @@
 .htmx-request .htmx-indicator,
 .htmx-request.htmx-indicator {
   opacity: 1;
+}
+
+/* Drawer */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background-color 200ms ease;
+  z-index: 40;
+}
+.drawer-overlay.is-open {
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85%;
+  background: #fff;
+  transform: translateX(-100%);
+  transition: transform 260ms ease;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+}
+.drawer-panel.is-open {
+  transform: translateX(0);
 }
