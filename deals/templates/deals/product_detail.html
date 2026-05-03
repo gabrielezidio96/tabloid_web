@@ -15,16 +15,11 @@
 
     <a href="{% url 'deals:home' %}" class="absolute left-4 top-4 bg-black/30 rounded-full p-2.5 no-underline"
       aria-label="Voltar">
-      <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd"
-          d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-          clip-rule="evenodd" />
-      </svg>
+      <i class="fa-solid fa-arrow-left text-white text-sm" aria-hidden="true"></i>
     </a>
 
     {% if product.limited_unit %}
-    <span class="absolute right-16 top-4 bg-red-500 rounded-full px-3 py-1.5 text-white text-xs font-bold">Restam {{
-      product.limited_unit }}</span>
+    <span class="absolute right-16 top-4 bg-red-500 rounded-full px-3 py-1.5 text-white text-xs font-bold">Restam {{ product.limited_unit }}</span>
     {% endif %}
   </div>
 
@@ -55,16 +50,10 @@
                 <span style="color: {{ row.icon_color }};" class="text-base">{{ row.icon }}</span>
               </div>
               <div class="flex flex-col gap-1">
-                <span
-                  class="text-sm font-semibold {% if row.is_regular_with_better %}text-gray-400{% else %}text-gray-700{% endif %}">
-                  {{ row.label }}</span>
+                <span class="text-sm font-semibold {% if row.is_regular_with_better %}text-gray-400{% else %}text-gray-700{% endif %}">{{ row.label }}</span>
                 {% if row.savings %}
                 <span class="self-start inline-flex items-center gap-1 bg-green-50 rounded-lg px-1.5 py-0.5">
-                  <svg class="w-2 h-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                      d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                      transform="rotate(180 10 10)" clip-rule="evenodd" />
-                  </svg>
+                  <i class="fa-solid fa-arrow-down text-green-600 text-[8px]" aria-hidden="true"></i>
                   <span class="text-green-700 text-xs font-bold">{{ row.savings }}% off</span>
                 </span>
                 {% endif %}
@@ -97,27 +86,18 @@
       <div class="flex items-center gap-3 bg-gray-100 rounded-xl px-3 py-3">
         <button type="button" onclick="var i=this.nextElementSibling;i.value=Math.max(1,parseInt(i.value||'1')-1)"
           class="cursor-pointer">
-          <svg class="w-2.5 h-2.5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-          </svg>
+          <i class="fa-solid fa-minus text-gray-700 text-[10px]" aria-hidden="true"></i>
         </button>
         <input type="number" name="qty" value="1" min="1"
           class="text-sm font-bold w-12 text-center bg-transparent border-0 focus:outline-none">
         <button type="button" onclick="var i=this.previousElementSibling;i.value=parseInt(i.value||'1')+1"
           class="cursor-pointer">
-          <svg class="w-2.5 h-2.5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clip-rule="evenodd" />
-          </svg>
+          <i class="fa-solid fa-plus text-gray-700 text-[10px]" aria-hidden="true"></i>
         </button>
       </div>
       <button type="submit"
         class="flex-1 rounded-2xl py-4 bg-gray-900 text-white text-base font-bold flex items-center justify-center gap-2 cursor-pointer">
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
-        </svg>
+        <i class="fa-solid fa-cart-shopping text-sm" aria-hidden="true"></i>
         Adicionar a Lista
       </button>
     </form>

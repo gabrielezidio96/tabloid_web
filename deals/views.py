@@ -73,7 +73,17 @@ def _get_featured(store_slug, state, city, today):
     return qs
 
 
-def _get_products(store_slug, state, city, today):
+_SORT_ORDERS = {
+    "featured": ["-snapshots__is_featured", "-snapshots__discount_pct", "name"],
+    "recent":   ["-snapshots__scraped_at", "name"],
+    "trending": ["-snapshots__discount_pct", "name"],
+    "cheapest": ["snapshots__sale_price", "snapshots__regular_price", "name"],
+}
+VALID_SORTS = set(_SORT_ORDERS)
+
+
+def _get_products(store_slug, state, city, today, sort="featured"):
+    order = _SORT_ORDERS.get(sort, _SORT_ORDERS["featured"])
     today_snapshots = PriceSnapshot.objects.filter(date=today)
     qs = (
         Product.objects.select_related("store", "category", "brand")
@@ -82,7 +92,7 @@ def _get_products(store_slug, state, city, today):
             Prefetch("snapshots", queryset=today_snapshots, to_attr="today_snapshots")
         )
         .distinct()
-        .order_by("store__name", "name")
+        .order_by(*order)
     )
     if store_slug:
         qs = qs.filter(store__slug=store_slug)
@@ -120,14 +130,18 @@ class HomeView(TemplateView):
         store_slug = self.request.GET.get("store", "")
         selected_state = _resolve_filter(self.request, "state", STATE_COOKIE)
         selected_city = _resolve_filter(self.request, "city", CITY_COOKIE)
+        sort = self.request.GET.get("sort", "featured")
+        if sort not in VALID_SORTS:
+            sort = "featured"
         states, cities, cities_by_state = _build_location_filters(selected_state)
         if selected_city and selected_city not in cities:
             selected_city = ""
 
         ctx["stores"] = Store.objects.filter(is_active=True)
         ctx["featured"] = _get_featured(store_slug, selected_state, selected_city, today)
-        ctx["products"] = _get_products(store_slug, selected_state, selected_city, today)
+        ctx["products"] = _get_products(store_slug, selected_state, selected_city, today, sort)
         ctx["selected_store"] = store_slug
+        ctx["selected_sort"] = sort
         ctx["states"] = states
         ctx["cities"] = cities
         ctx["cities_by_state"] = cities_by_state

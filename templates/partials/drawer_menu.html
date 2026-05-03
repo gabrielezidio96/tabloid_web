@@ -10,7 +10,7 @@
     </div>
     <span class="flex-1 text-lg font-bold text-gray-900">Tabloid</span>
     <label for="drawer-toggle" class="w-8 h-8 flex items-center justify-center cursor-pointer">
-      <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      <i class="fa-solid fa-xmark text-gray-700 text-sm" aria-hidden="true"></i>
     </label>
   </div>
 
@@ -18,7 +18,7 @@
     <span class="text-xs font-bold text-gray-400 tracking-widest mb-1">LOCALIZAÇÃO</span>
     {% if selected_state or selected_city %}
     <div class="flex items-center bg-red-50 rounded-xl p-3 gap-2.5">
-      <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+      <i class="fa-solid fa-location-dot text-red-500 text-sm" aria-hidden="true"></i>
       <div class="flex-1">
         <span class="block text-sm font-semibold text-gray-900">{{ selected_city|default:"Selecionar cidade" }}</span>
         {% if selected_state %}<span class="block text-xs text-gray-500 mt-px">{{ selected_state }}</span>{% endif %}
@@ -27,7 +27,7 @@
     {% endif %}
     <button type="button" id="drawer-use-location" data-geolocate-url="{% url 'geolocate' %}"
       class="flex items-center bg-red-50 rounded-xl p-3.5 gap-2.5 border border-red-200 cursor-pointer">
-      <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-13a1 1 0 112 0v.092a4.535 4.535 0 011.676.662C13.398 6.766 14 8.05 14 10c0 1.95-.602 3.234-1.324 4.246A4.535 4.535 0 0111 14.908V15a1 1 0 11-2 0v-.092a4.535 4.535 0 01-1.676-.662C6.602 13.234 6 11.95 6 10c0-1.95.602-3.234 1.324-4.246A4.535 4.535 0 019 5.092V5z" clip-rule="evenodd"/></svg>
+      <i class="fa-solid fa-crosshairs text-red-500 text-sm" aria-hidden="true"></i>
       <span class="flex-1 text-sm font-semibold text-red-500 text-left">Usar minha localização</span>
     </button>
   </div>
@@ -37,19 +37,19 @@
   <div class="px-5 pt-5 pb-2 flex flex-col gap-2">
     <span class="text-xs font-bold text-gray-400 tracking-widest mb-1">MENU</span>
     <a href="{% url 'deals:home' %}" class="flex items-center py-3 gap-3.5 no-underline">
-      <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+      <i class="fa-solid fa-house text-gray-500 text-sm w-4 text-center" aria-hidden="true"></i>
       <span class="text-sm text-gray-700 font-medium">Início</span>
     </a>
     <a href="{% url 'deals:store-list' %}" class="flex items-center py-3 gap-3.5 no-underline">
-      <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+      <i class="fa-solid fa-filter text-gray-500 text-sm w-4 text-center" aria-hidden="true"></i>
       <span class="text-sm text-gray-700 font-medium">Lojas</span>
     </a>
     <a href="{% url 'deals:saved-list-list' %}" class="flex items-center py-3 gap-3.5 no-underline">
-      <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8h8V6z" clip-rule="evenodd"/></svg>
+      <i class="fa-regular fa-rectangle-list text-gray-500 text-sm w-4 text-center" aria-hidden="true"></i>
       <span class="text-sm text-gray-700 font-medium">Minhas listas</span>
     </a>
     <a href="{% url 'deals:notification-list' %}" class="flex items-center py-3 gap-3.5 no-underline">
-      <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+      <i class="fa-solid fa-bell text-gray-500 text-sm w-4 text-center" aria-hidden="true"></i>
       <span class="text-sm text-gray-700 font-medium">Notificações</span>
     </a>
   </div>

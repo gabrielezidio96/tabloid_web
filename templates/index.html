@@ -22,41 +22,30 @@
   <div class="flex items-center justify-between px-4 mb-3">
     <h2 class="text-sm font-bold text-gray-900">Ofertas</h2>
   </div>
+  {% with sp=selected_state|urlencode cp=selected_city|urlencode store=selected_store|urlencode %}
   <div class="flex px-4 gap-2 mb-4 overflow-x-auto scrollbar-none">
-    <button
-      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-gray-900 text-white text-xs font-bold">
-      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd"
-          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-          clip-rule="evenodd" />
-      </svg>
+    <a href="?sort=featured{% if store %}&store={{ store }}{% endif %}{% if sp %}&state={{ sp }}{% endif %}{% if cp %}&city={{ cp }}{% endif %}"
+      class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold {% if selected_sort == 'featured' %}bg-gray-900 text-white{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
       Destaques
-    </button>
-    <button
-      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" />
-        <path stroke-linecap="round" d="M12 6v6l4 2" />
-      </svg>
+    </a>
+    <a href="?sort=recent{% if store %}&store={{ store }}{% endif %}{% if sp %}&state={{ sp }}{% endif %}{% if cp %}&city={{ cp }}{% endif %}"
+      class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'recent' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+      <i class="fa-regular fa-clock" aria-hidden="true"></i>
       Recentes
-    </button>
-    <button
-      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
-      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd"
-          d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-          clip-rule="evenodd" />
-      </svg>
+    </a>
+    <a href="?sort=trending{% if store %}&store={{ store }}{% endif %}{% if sp %}&state={{ sp }}{% endif %}{% if cp %}&city={{ cp }}{% endif %}"
+      class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'trending' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+      <i class="fa-solid fa-fire" aria-hidden="true"></i>
       Em alta
-    </button>
-    <button
-      class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-medium">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-      </svg>
+    </a>
+    <a href="?sort=cheapest{% if store %}&store={{ store }}{% endif %}{% if sp %}&state={{ sp }}{% endif %}{% if cp %}&city={{ cp }}{% endif %}"
+      class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'cheapest' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+      <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
       Menor preço
-    </button>
+    </a>
   </div>
+  {% endwith %}
 
   {% if products %}
   <div>
