@@ -4,7 +4,7 @@
 {% block title %}{{ saved_list.name }} — Tabloid{% endblock %}
 
 {% block content %}
-<div class="px-5 pb-4 flex items-center gap-3">
+<div class="px-5 lg:px-0 pb-4 flex items-center gap-3">
   <a href="{% url 'deals:saved-list-list' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 no-underline">
     <i class="fa-solid fa-arrow-left text-gray-700 text-sm" aria-hidden="true"></i>
   </a>
@@ -18,7 +18,7 @@
   {% for group in store_groups %}
   {% include "partials/store_section_header.html" with title=group.title subtotal=group.subtotal %}
   {% for row in group.rows %}
-  <div class="bg-white rounded-2xl p-3 mx-5 mb-3 shadow-sm border border-gray-100 flex items-center gap-3">
+  <div class="bg-white rounded-2xl p-3 lg:p-5 mx-5 lg:mx-0 mb-3 lg:mb-4 shadow-sm border border-gray-100 flex items-center gap-3">
     {% if row.product.thumb_image_url or row.product.image_url %}
     <img src="{{ row.product.thumb_image_url|default:row.product.image_url }}" alt="{{ row.product.name }}" class="w-14 h-14 rounded-xl object-cover">
     {% else %}

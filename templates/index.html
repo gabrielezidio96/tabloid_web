@@ -2,13 +2,13 @@
 {% load l10n %}
 
 {% block content %}
-<section class="mb-5">
-  <div class="flex items-center justify-between px-4 mb-3">
-    <h2 class="text-sm font-bold text-gray-900">Lojas</h2>
+<section class="mb-5 lg:mb-8">
+  <div class="flex items-center justify-between px-4 lg:px-0 mb-3 lg:mb-4">
+    <h2 class="text-sm lg:text-base font-bold text-gray-900">Lojas</h2>
     <span class="text-xs text-gray-400">{{ today|date:"d \\d\\e F" }}</span>
   </div>
 
-  <div class="flex items-start overflow-x-auto pb-2 px-3 scrollbar-none">
+  <div class="flex items-start overflow-x-auto pb-2 px-3 lg:px-0 scrollbar-none">
     {% for s in stores %}
     {% url 'deals:store-detail' s.slug as store_href %}
     {% include "partials/store_card.html" with store=s selected=False href=store_href %}
@@ -16,14 +16,14 @@
   </div>
 </section>
 
-<div class="h-px bg-gray-200 mx-4 mb-5"></div>
+<div class="h-px bg-gray-200 mx-4 lg:mx-0 mb-5 lg:mb-8"></div>
 
 <section class="mb-4">
-  <div class="flex items-center justify-between px-4 mb-3">
-    <h2 class="text-sm font-bold text-gray-900">Ofertas</h2>
+  <div class="flex items-center justify-between px-4 lg:px-0 mb-3 lg:mb-4">
+    <h2 class="text-sm lg:text-base font-bold text-gray-900">Ofertas</h2>
   </div>
   {% with sp=selected_state|urlencode cp=selected_city|urlencode store=selected_store|urlencode %}
-  <div class="flex px-4 gap-2 mb-4 overflow-x-auto scrollbar-none">
+  <div class="flex px-4 lg:px-0 gap-2 mb-4 lg:mb-5 overflow-x-auto scrollbar-none">
     <a href="?sort=featured{% if store %}&store={{ store }}{% endif %}{% if sp %}&state={{ sp }}{% endif %}{% if cp %}&city={{ cp }}{% endif %}"
       class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold {% if selected_sort == 'featured' %}bg-gray-900 text-white{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
       <i class="fa-solid fa-bolt" aria-hidden="true"></i>
@@ -57,7 +57,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="text-gray-400 text-sm px-4">Sem produtos disponíveis para os filtros selecionados.</p>
+  <p class="text-gray-400 text-sm px-4 lg:px-0">Sem produtos disponíveis para os filtros selecionados.</p>
   {% endif %}
 </section>
 {% endblock %}
