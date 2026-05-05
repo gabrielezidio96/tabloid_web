@@ -33,4 +33,7 @@ urlpatterns = [
     path("posts/", views.PostListView.as_view(), name="post-list"),
     path("posts/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"),
     path("posts/<int:pk>/vote/", views.post_vote, name="post-vote"),
+
+    path("categories/", views.CategoryListView.as_view(), name="category-list"),
+    path("categories/<slug:slug>/", views.CategoryDetailView.as_view(), name="category-detail"),
 ]

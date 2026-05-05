@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} — Tabloid{% endblock %}
+
+{% block content %}
+<div class="px-4 lg:px-0 mb-5 lg:mb-6 flex items-start gap-3">
+  <a href="{% url 'deals:category-list' %}"
+     class="mt-0.5 w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm no-underline">
+    <i class="fa-solid fa-arrow-left text-gray-500 text-sm" aria-hidden="true"></i>
+  </a>
+  <div>
+    <h1 class="text-xl font-bold text-gray-900">{{ category.name }}</h1>
+    <p class="text-sm text-gray-400 mt-0.5">{{ rows|length }} oferta{{ rows|length|pluralize:"s" }}</p>
+  </div>
+</div>
+
+<div class="flex px-4 lg:px-0 gap-2 mb-4 lg:mb-5 overflow-x-auto scrollbar-none">
+  <a href="?sort=featured"
+     class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold {% if selected_sort == 'featured' %}bg-gray-900 text-white{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+    Destaques
+  </a>
+  <a href="?sort=recent"
+     class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'recent' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+    Recentes
+  </a>
+  <a href="?sort=trending"
+     class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'trending' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-fire" aria-hidden="true"></i>
+    Em alta
+  </a>
+  <a href="?sort=cheapest"
+     class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'cheapest' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+    Menor preço
+  </a>
+</div>
+
+{% if rows %}
+<div>
+  {% for row in rows %}
+  {% include "partials/post_card.html" with row=row %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center gap-3 px-8 py-20">
+  <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+    <i class="fa-solid fa-box-open text-gray-300 text-2xl" aria-hidden="true"></i>
+  </div>
+  <span class="text-base font-bold text-gray-900 text-center">Nenhum produto encontrado</span>
+  <span class="text-sm text-gray-400 text-center">Nenhuma oferta disponível nesta categoria.</span>
+</div>
+{% endif %}
+{% endblock %}

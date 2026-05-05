@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias — Tabloid{% endblock %}
+
+{% block content %}
+<div class="px-4 lg:px-0 mb-5 lg:mb-6">
+  <h1 class="text-xl font-bold text-gray-900">Categorias</h1>
+  <p class="text-sm text-gray-400 mt-0.5">{{ categories|length }} categorias disponíveis</p>
+</div>
+
+{% if categories %}
+<div class="flex flex-col gap-3 px-4 lg:px-0">
+  {% for item in categories %}
+  <a href="{{ item.href }}" class="bg-white rounded-2xl border border-slate-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex items-center gap-4 p-4 no-underline">
+    {% if item.category.image_url %}
+    <img src="{{ item.category.image_url }}" alt="{{ item.category.name }}"
+         class="w-14 h-14 rounded-2xl object-cover bg-gray-100 shrink-0 border border-gray-100"
+         loading="lazy">
+    {% else %}
+    <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0 text-gray-400 text-xl font-bold">
+      {{ item.category.name|slice:":1"|upper }}
+    </div>
+    {% endif %}
+
+    <div class="flex-1 min-w-0">
+      <span class="block text-base font-bold text-gray-900 truncate">{{ item.category.name }}</span>
+      <span class="block text-xs text-gray-400 mt-0.5">{{ item.product_count }} produto{{ item.product_count|pluralize:"s" }}</span>
+    </div>
+
+    <i class="fa-solid fa-chevron-right text-gray-300 text-xs shrink-0" aria-hidden="true"></i>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center gap-3 px-8 py-20">
+  <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+    <i class="fa-solid fa-layer-group text-gray-300 text-2xl" aria-hidden="true"></i>
+  </div>
+  <span class="text-base font-bold text-gray-900 text-center">Nenhuma categoria disponível</span>
+  <span class="text-sm text-gray-400 text-center">Volte mais tarde.</span>
+</div>
+{% endif %}
+{% endblock %}

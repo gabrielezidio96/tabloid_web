@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView
 
-from catalog.models import DailyFeatured, PriceSnapshot, Product
+from catalog.models import Category, DailyFeatured, PriceSnapshot, Product
 from stores.models import Store, StoreAddress
 
 from .cart import Cart, PRICE_KEYS, DEFAULT_PRICE_KEY
@@ -771,6 +771,59 @@ class PostDetailView(DetailView):
         ctx = super().get_context_data(**kwargs)
         user_vote = _get_user_post_vote(self.request, self.object.pk)
         ctx.update(_build_post_row(self.object, user_vote))
+        return ctx
+
+
+class CategoryListView(TemplateView):
+    template_name = "deals/category_list.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        categories = list(Category.objects.all())
+        ctx["categories"] = [
+            {
+                "category": cat,
+                "product_count": cat.products.count(),
+                "href": reverse("deals:category-detail", kwargs={"slug": cat.slug}),
+            }
+            for cat in categories
+        ]
+        return ctx
+
+
+class CategoryDetailView(TemplateView):
+    template_name = "deals/category.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        category = get_object_or_404(Category, slug=self.kwargs["slug"])
+        sort = self.request.GET.get("sort", "featured")
+        if sort not in VALID_POST_SORTS:
+            sort = "featured"
+
+        qs = (
+            Post.objects.filter(is_active=True, product__category=category)
+            .select_related("product__brand", "store")
+            .prefetch_related("prices")
+        )
+        if sort == "cheapest":
+            qs = qs.annotate(min_price=Min("prices__amount")).order_by("min_price")
+        else:
+            qs = qs.order_by(*_POST_SORT_ORDERS.get(sort, _POST_SORT_ORDERS["featured"]))
+
+        posts = list(qs)
+        if self.request.user.is_authenticated:
+            vote_map = dict(
+                PostVote.objects.filter(user=self.request.user, post_id__in=[p.pk for p in posts])
+                .values_list("post_id", "direction")
+            )
+        else:
+            raw = self.request.session.get(SESSION_POST_VOTES_KEY, {})
+            vote_map = {int(k): v for k, v in raw.items()}
+
+        ctx["category"] = category
+        ctx["rows"] = [_build_post_row(post, vote_map.get(post.pk)) for post in posts]
+        ctx["selected_sort"] = sort
         return ctx
 
 
