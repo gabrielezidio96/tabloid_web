@@ -2,7 +2,8 @@ from collections import defaultdict
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
+from django.db import transaction
+from django.db.models import F, Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -14,7 +15,7 @@ from catalog.models import DailyFeatured, PriceSnapshot, Product
 from stores.models import Store, StoreAddress
 
 from .cart import Cart, PRICE_KEYS, DEFAULT_PRICE_KEY
-from .models import Notification, SavedList, SavedListItem
+from .models import Notification, Post, PostVote, SavedList, SavedListItem
 
 
 STATE_COOKIE = "deals_state"
@@ -517,3 +518,203 @@ class StoreDetailView(DetailView):
             .order_by("name")
         )
         return ctx
+
+
+# ---------------------------------------------------------------------------
+# Post feed
+# ---------------------------------------------------------------------------
+
+SESSION_POST_VOTES_KEY = "post_votes"
+
+_TEMP_HOT_THRESHOLD = 1
+_TEMP_COLD_THRESHOLD = -1
+
+
+def get_expiry_info(expires_at):
+    """Python equivalent of getExpiryInfo() from the mobile app."""
+    if expires_at is None:
+        return None
+    today = timezone.localdate()
+    delta = (expires_at - today).days
+    if delta < 0:
+        return None
+    if delta == 0:
+        return {"label": "hoje", "is_today": True}
+    if delta == 1:
+        return {"label": "amanhã", "is_today": False}
+    return {"label": f"em {delta} dias", "is_today": False}
+
+
+def get_relative_time(posted_at):
+    """Python equivalent of getRelativeTime() from the mobile app."""
+    diff = int((timezone.now() - posted_at).total_seconds())
+    if diff < 60:
+        return f"{diff} s"
+    if diff < 3600:
+        return f"{diff // 60} min"
+    if diff < 86400:
+        return f"{diff // 3600} h"
+    return f"{diff // 86400} d"
+
+
+def _get_user_post_vote(request, post_id):
+    if request.user.is_authenticated:
+        return (
+            PostVote.objects.filter(post_id=post_id, user=request.user)
+            .values_list("direction", flat=True)
+            .first()
+        )
+    return request.session.get(SESSION_POST_VOTES_KEY, {}).get(str(post_id))
+
+
+def _post_best_price(prices):
+    if not prices:
+        return None
+    return min(p.amount for p in prices)
+
+
+def _post_regular_price(prices):
+    for p in prices:
+        if p.discount_type == "regular":
+            return p.amount
+    return None
+
+
+def _build_post_row(post, user_vote):
+    prices = list(post.prices.all())
+    best_price = _post_best_price(prices)
+    regular_price = _post_regular_price(prices)
+    has_discount = regular_price is not None and best_price is not None and best_price < regular_price
+    discount_pct = None
+    if has_discount:
+        discount_pct = int(round((regular_price - best_price) / regular_price * 100))
+    temp = post.temperature
+    if temp >= _TEMP_HOT_THRESHOLD:
+        temp_class = "hot"
+    elif temp <= _TEMP_COLD_THRESHOLD:
+        temp_class = "cold"
+    else:
+        temp_class = "neutral"
+    return {
+        "post": post,
+        "product": post.product,
+        "store_name": post.store.name,
+        "prices": prices,
+        "best_price": best_price,
+        "regular_price": regular_price,
+        "has_discount": has_discount,
+        "discount_pct": discount_pct,
+        "expiry_info": get_expiry_info(post.expires_at),
+        "relative_time": get_relative_time(post.posted_at),
+        "temperature": post.temperature,
+        "user_vote": user_vote,
+        "temp_class": temp_class,
+    }
+
+
+VALID_POST_SORTS = {"recent", "trending", "expiring"}
+
+_POST_SORT_ORDERS = {
+    "recent": ["-posted_at"],
+    "trending": ["-temperature", "-posted_at"],
+    "expiring": ["expires_at", "-posted_at"],
+}
+
+
+class PostListView(TemplateView):
+    template_name = "deals/post_list.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        sort = self.request.GET.get("sort", "recent")
+        if sort not in VALID_POST_SORTS:
+            sort = "recent"
+        store_slug = self.request.GET.get("store", "")
+        order = _POST_SORT_ORDERS[sort]
+        qs = (
+            Post.objects.filter(is_active=True)
+            .select_related("product__brand", "store")
+            .prefetch_related("prices")
+            .order_by(*order)
+        )
+        if store_slug:
+            qs = qs.filter(store__slug=store_slug)
+        session_votes = self.request.session.get(SESSION_POST_VOTES_KEY, {})
+        rows = []
+        for post in qs:
+            if self.request.user.is_authenticated:
+                user_vote = (
+                    PostVote.objects.filter(post=post, user=self.request.user)
+                    .values_list("direction", flat=True)
+                    .first()
+                )
+            else:
+                user_vote = session_votes.get(str(post.pk))
+            rows.append(_build_post_row(post, user_vote))
+        ctx["rows"] = rows
+        ctx["selected_sort"] = sort
+        ctx["stores"] = Store.objects.filter(is_active=True)
+        ctx["selected_store"] = store_slug
+        return ctx
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = "deals/post_detail.html"
+    context_object_name = "post"
+
+    def get_queryset(self):
+        return (
+            Post.objects.filter(is_active=True)
+            .select_related("product__brand", "product__category", "store")
+            .prefetch_related("prices")
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user_vote = _get_user_post_vote(self.request, self.object.pk)
+        ctx.update(_build_post_row(self.object, user_vote))
+        return ctx
+
+
+@require_POST
+@transaction.atomic
+def post_vote(request, pk):
+    post = get_object_or_404(Post.objects.select_for_update(), pk=pk, is_active=True)
+    direction = request.POST.get("direction", "")
+    if direction not in ("up", "down"):
+        return redirect(_safe_next(request, reverse("deals:post-list")))
+
+    delta = 1 if direction == "up" else -1
+
+    if request.user.is_authenticated:
+        existing = PostVote.objects.filter(post=post, user=request.user).first()
+        if existing:
+            if existing.direction == direction:
+                post.temperature = F("temperature") - delta
+                existing.delete()
+            else:
+                post.temperature = F("temperature") + delta * 2
+                existing.direction = direction
+                existing.save(update_fields=["direction"])
+        else:
+            PostVote.objects.create(post=post, user=request.user, direction=direction)
+            post.temperature = F("temperature") + delta
+        post.save(update_fields=["temperature"])
+    else:
+        votes = request.session.get(SESSION_POST_VOTES_KEY, {})
+        key = str(pk)
+        existing = votes.get(key)
+        if existing == direction:
+            post.temperature = F("temperature") - delta
+            votes.pop(key)
+        elif existing:
+            post.temperature = F("temperature") + delta * 2
+            votes[key] = direction
+        else:
+            post.temperature = F("temperature") + delta
+            votes[key] = direction
+        request.session[SESSION_POST_VOTES_KEY] = votes
+        post.save(update_fields=["temperature"])
+
+    return redirect(_safe_next(request, reverse("deals:post-list")))

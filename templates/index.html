@@ -4,11 +4,11 @@
 {% block content %}
 <section class="mb-5 lg:mb-8">
   <div class="flex items-center justify-between px-4 lg:px-0 mb-3 lg:mb-4">
-    <h2 class="text-sm lg:text-base font-bold text-gray-900">Lojas</h2>
-    <span class="text-xs text-gray-400">{{ today|date:"d \\d\\e F" }}</span>
+    <h2 class="text-lg lg:text-xl font-bold text-gray-900">Lojas</h2>
+    <a href="{% url 'deals:store-list' %}" class="no-underline inline-flex items-center rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase bg-white border border-gray-200 text-gray-700">Ver todas</a>
   </div>
 
-  <div class="flex items-start overflow-x-auto pb-2 px-3 lg:px-0 scrollbar-none">
+  <div class="flex items-start overflow-x-auto pb-2 px-4 lg:px-0 gap-3 scrollbar-none">
     {% for s in stores %}
     {% url 'deals:store-detail' s.slug as store_href %}
     {% include "partials/store_card.html" with store=s selected=False href=store_href %}

@@ -1,4 +1,4 @@
-{% load l10n %}
+{% load l10n deals_tags %}
 {% if featured %}
 {% for item in featured %}
 {% with s=item.snapshot p=item.snapshot.product %}
@@ -9,40 +9,51 @@
       {% if p.image_url %}
       <img class="w-24 h-24 rounded-xl object-cover bg-neutral-50" src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
       {% else %}
-      <div class="w-24 h-24 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-300 text-2xl">🛒</div>
+      <div class="w-24 h-24 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-300 text-2xl">
+        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+      </div>
       {% endif %}
       <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-        <div class="flex items-center gap-1 text-xs text-neutral-500">
-          <span class="truncate font-medium">{{ p.store.name }}</span>
-          <span class="text-blue-500">✓</span>
+        <div class="flex items-center gap-1.5 text-xs text-neutral-600">
+          <span class="truncate font-semibold">{{ p.store.name }}</span>
+          <i class="fa-solid fa-circle-check text-blue-500 text-[11px]" aria-hidden="true"></i>
+          {% if s.created_at %}
+          <span class="ml-auto inline-flex items-center gap-1 text-neutral-400 whitespace-nowrap">
+            <i class="fa-regular fa-clock text-[11px]" aria-hidden="true"></i>
+            {{ s.created_at|short_timesince }}
+          </span>
+          {% endif %}
         </div>
+        <span class="text-base font-bold leading-snug text-neutral-900 line-clamp-2">{{ p.name }}</span>
         {% if s.sale_price %}
-        <span class="self-start rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[0.68rem] font-semibold text-red-500">Oferta rel&acirc;mpago</span>
+        <span class="self-start inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-orange-600">
+          <i class="fa-regular fa-clock text-orange-500 text-[11px]" aria-hidden="true"></i>
+          Termina amanh&atilde;
+        </span>
         {% endif %}
-        <span class="text-sm font-semibold leading-snug text-neutral-900 line-clamp-3">{{ p.name }}</span>
-        {% if p.brand %}<span class="text-xs text-neutral-400">{{ p.brand.name }}</span>{% endif %}
         <div class="mt-auto">
-          <span class="text-[0.68rem] text-neutral-400">A partir de</span>
-          <div class="flex items-baseline gap-1.5 flex-wrap">
+          <span class="text-[0.62rem] font-semibold uppercase tracking-wider text-neutral-400">A partir de</span>
+          <div class="flex items-baseline gap-2 flex-wrap">
         {% if s.sale_price %}
-          <span class="text-base font-bold text-neutral-900">R$ {{ s.sale_price|localize }}</span>
+          <span class="text-lg font-bold text-neutral-900">R$ {{ s.sale_price|localize }}</span>
           <span class="text-xs text-neutral-400 line-through">R$ {{ s.regular_price|localize }}</span>
         {% else %}
-          <span class="text-base font-bold text-neutral-900">R$ {{ s.regular_price|localize }}</span>
+          <span class="text-lg font-bold text-neutral-900">R$ {{ s.regular_price|localize }}</span>
         {% endif %}
           </div>
         </div>
       </div>
     </div>
-    <div class="border-t border-neutral-100 px-3 py-2.5 flex items-center gap-2 text-xs text-neutral-500">
-      {% if s.discount_pct %}
-      <span class="inline-flex items-center gap-1 text-blue-500 font-semibold">🏷 {{ s.discount_pct|floatformat:0 }}%</span>
-      {% else %}
-      <span class="inline-flex items-center gap-1 text-blue-500 font-semibold">🏷 Oferta</span>
-      {% endif %}
-      <span class="text-neutral-300">|</span>
-      <span class="inline-flex items-center gap-1 text-neutral-400">💬 0</span>
-      <span class="ml-auto font-semibold text-neutral-600">Ver mais</span>
+    <div class="border-t border-neutral-100 px-3 py-2.5 flex items-center gap-2 text-xs">
+      <span class="inline-flex items-center gap-2 rounded-full bg-white shadow-sm px-3 py-1.5 font-bold">
+        <i class="fa-solid fa-tag text-blue-500 text-[11px]" aria-hidden="true"></i>
+        <span class="text-orange-500">{% if s.discount_pct %}{{ s.discount_pct|floatformat:0 }}&deg;{% else %}Oferta{% endif %}</span>
+        <i class="fa-solid fa-tag text-orange-400 text-[11px]" aria-hidden="true"></i>
+      </span>
+      <span class="ml-auto inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white font-semibold px-4 py-2">
+        Ver oferta
+        <i class="fa-solid fa-arrow-right text-[11px]" aria-hidden="true"></i>
+      </span>
     </div>
   </article>
 </a>

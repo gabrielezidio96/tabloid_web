@@ -28,4 +28,8 @@ urlpatterns = [
 
     path("stores/", views.StoreListView.as_view(), name="store-list"),
     path("stores/<slug:slug>/", views.StoreDetailView.as_view(), name="store-detail"),
+
+    path("posts/", views.PostListView.as_view(), name="post-list"),
+    path("posts/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"),
+    path("posts/<int:pk>/vote/", views.post_vote, name="post-vote"),
 ]
