@@ -50,7 +50,7 @@
     </div>
     <form method="post" action="{% url 'deals:saved-list-load' saved_list.pk %}">
       {% csrf_token %}
-      <button type="submit" class="w-full rounded-2xl py-4 bg-gray-700 text-white text-base font-bold flex items-center justify-center gap-2 cursor-pointer">
+      <button type="submit" class="w-full rounded-2xl py-4 bg-gray-900 text-white text-base font-bold flex items-center justify-center gap-2 cursor-pointer">
         <i class="fa-solid fa-cart-shopping text-sm" aria-hidden="true"></i>
         Carregar no carrinho
       </button>

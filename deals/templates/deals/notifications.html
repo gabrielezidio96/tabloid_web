@@ -30,11 +30,11 @@
 {% else %}
 <div class="pt-2 pb-8">
   {% for n in notifications %}
-  {% if n.type == 'offer' %}{% with icon='🏷' icon_color='#ef4444' bg_color='#fff5f5' %}
+  {% if n.type == 'offer' %}{% with icon='tag' icon_color='#ef4444' bg_color='#fff5f5' %}
     {% include "deals/_notification_row.html" %}
-  {% endwith %}{% elif n.type == 'promo' %}{% with icon='⚡' icon_color='#f97316' bg_color='#fff7ed' %}
+  {% endwith %}{% elif n.type == 'promo' %}{% with icon='bolt' icon_color='#f97316' bg_color='#fff7ed' %}
     {% include "deals/_notification_row.html" %}
-  {% endwith %}{% else %}{% with icon='🔔' icon_color='#3b82f6' bg_color='#eff6ff' %}
+  {% endwith %}{% else %}{% with icon='bell' icon_color='#3b82f6' bg_color='#eff6ff' %}
     {% include "deals/_notification_row.html" %}
   {% endwith %}{% endif %}
   {% endfor %}

@@ -18,8 +18,8 @@
 
         <div class="flex items-center justify-between gap-1">
           <div class="flex items-center gap-1 min-w-0">
-            <span class="text-xs font-medium text-gray-600 truncate">{{ product.store.name }}</span>
-            <i class="fa-solid fa-circle-check text-blue-500 text-xs shrink-0" aria-hidden="true"></i>
+            <span class="text-xs font-medium text-gray-500 truncate">{{ product.store.name }}</span>
+            <i class="fa-solid fa-circle-check text-blue-500 text-[10px] shrink-0" aria-hidden="true"></i>
           </div>
           {% if snapshot.scraped_at %}
           <span class="shrink-0 flex items-center gap-0.5 text-xs text-gray-400">
@@ -29,7 +29,14 @@
           {% endif %}
         </div>
 
-        <span class="text-sm font-bold text-gray-900 leading-snug line-clamp-2">{{ product.name }}</span>
+        {% if snapshot.sale_price %}
+        <span class="self-start inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-brand-soft border border-red-200">
+          <i class="fa-solid fa-bolt text-red-500 text-[9px]" aria-hidden="true"></i>
+          <span class="text-red-500 text-xs font-semibold">Oferta relâmpago</span>
+        </span>
+        {% endif %}
+
+        <span class="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{{ product.name }}</span>
 
         <div class="mt-auto">
           <span class="block text-xs text-gray-400">A partir de</span>

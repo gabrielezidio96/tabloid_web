@@ -209,10 +209,10 @@ class ProductDetailView(DetailView):
 
     def _build_price_rows(self, snapshot):
         configs = [
-            ("regular", "Preço normal", "🏷", "#9ca3af", "#e5e7eb", snapshot.regular_price),
-            ("discounted", "Oferta", "%", "#ef4444", "#fca5a5", snapshot.sale_price),
-            ("app", "Preço App", "📱", "#f97316", "#fdba74", snapshot.price_app),
-            ("club", "Clube de crédito", "💳", "#3b82f6", "#93c5fd", snapshot.price_credit_card_club),
+            ("regular", "Preço normal", "tag", "#9ca3af", "#e5e7eb", snapshot.regular_price),
+            ("discounted", "Oferta", "percent", "#ef4444", "#fca5a5", snapshot.sale_price),
+            ("app", "Preço App", "mobile-screen", "#f97316", "#fdba74", snapshot.price_app),
+            ("club", "Clube de crédito", "credit-card", "#3b82f6", "#93c5fd", snapshot.price_credit_card_club),
         ]
         rows = []
         for row_id, label, icon, icon_color, accent, value in configs:

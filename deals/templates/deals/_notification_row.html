@@ -2,7 +2,9 @@
 <form method="post" action="{% url 'deals:notification-mark' n.pk %}" class="block mx-5 mb-3">
   {% csrf_token %}
   <button type="submit" class="w-full text-left bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3 cursor-pointer">
-    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0" style="background-color: {{ bg_color }}; color: {{ icon_color }};">{{ icon }}</div>
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background-color: {{ bg_color }};">
+      <i class="fa-solid fa-{{ icon }} text-base" style="color: {{ icon_color }};" aria-hidden="true"></i>
+    </div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
         <span class="text-sm font-bold text-gray-900 truncate">{{ n.title }}</span>

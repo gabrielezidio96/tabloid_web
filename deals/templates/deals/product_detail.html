@@ -23,7 +23,7 @@
     {% endif %}
   </div>
 
-  <div class="-mt-8 bg-[#faf8f5] rounded-t-[32px] pt-3">
+  <div class="-mt-8 bg-cream rounded-t-[32px] pt-3">
     <div class="flex justify-center pb-5">
       <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
     </div>
@@ -42,12 +42,13 @@
       <div class="flex flex-col gap-3">
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Preços disponíveis</span>
         {% for row in price_rows %}
-        <div class="bg-white rounded-2xl shadow-sm {% if row.is_best %}ring-2{% endif %}" {% if row.is_best %}style="--tw-ring-color: {{ row.accent_color }};" {% endif %}>
+        <div class="bg-white rounded-2xl"
+          style="{% if row.is_best %}border: 1.5px solid {{ row.accent_color }}; box-shadow: 0 4px 16px {{ row.icon_color }}2e;{% else %}box-shadow: 0 4px 8px rgba(0,0,0,0.06);{% endif %}">
           <div class="flex items-center justify-between px-4 py-3.5">
             <div class="flex items-center gap-3">
               <div class="w-[42px] h-[42px] rounded-xl flex items-center justify-center"
                 style="background-color: {{ row.icon_color }}18;">
-                <span style="color: {{ row.icon_color }};" class="text-base">{{ row.icon }}</span>
+                <i class="fa-solid fa-{{ row.icon }} text-base" style="color: {{ row.icon_color }};" aria-hidden="true"></i>
               </div>
               <div class="flex flex-col gap-1">
                 <span class="text-sm font-semibold {% if row.is_regular_with_better %}text-gray-400{% else %}text-gray-700{% endif %}">{{ row.label }}</span>
