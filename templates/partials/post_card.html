@@ -1,0 +1,98 @@
+{% load l10n %}
+{# Args: row (from _build_post_row) #}
+<div class="mx-4 lg:mx-0 mb-3 lg:mb-4">
+  <article class="bg-white rounded-[24px] border border-slate-50 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
+
+    <a href="{% url 'deals:post-detail' row.post.pk %}" class="block no-underline text-inherit">
+      <div class="flex gap-3 p-3 lg:gap-4 lg:p-4 bg-white">
+
+        {% with img=row.product.thumb_image_url|default:row.product.image_url %}
+        {% if img %}
+        <img src="{{ img }}" alt="{{ row.product.name }}"
+             class="w-28 h-28 lg:w-[140px] lg:h-[140px] shrink-0 rounded-2xl object-cover bg-gray-50"
+             loading="lazy">
+        {% else %}
+        <div class="w-28 h-28 lg:w-[140px] lg:h-[140px] shrink-0 rounded-2xl bg-gray-100 flex items-center justify-center text-3xl text-gray-300">
+          <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="flex-1 min-w-0 flex flex-col gap-1 py-1">
+
+          <div class="flex items-center justify-between gap-1">
+            <div class="flex items-center gap-1 min-w-0 bg-slate-50 px-2.5 py-1 rounded-full">
+              <span class="text-xs font-bold text-slate-700 truncate">{{ row.store_name }}</span>
+              <i class="fa-solid fa-circle-check text-blue-500 text-[10px] shrink-0" aria-hidden="true"></i>
+            </div>
+            <span class="shrink-0 flex items-center gap-1 text-xs font-medium text-slate-400">
+              <i class="fa-regular fa-clock text-[10px]" aria-hidden="true"></i>
+              {{ row.relative_time }}
+            </span>
+          </div>
+
+          {% if row.product.brand %}
+          <span class="text-xs text-gray-400">{{ row.product.brand.name }}</span>
+          {% endif %}
+
+          <span class="text-base lg:text-lg font-bold text-slate-800 leading-snug line-clamp-2 mt-1">{{ row.product.name }}</span>
+
+          {% if row.expiry_info %}
+          <span class="self-start inline-flex items-center gap-1.5 rounded-md px-2 py-1 {% if row.expiry_info.is_today %}bg-red-50{% else %}bg-[#fff6e5]{% endif %} mt-0.5">
+            <i class="fa-regular fa-clock {% if row.expiry_info.is_today %}text-red-400{% else %}text-orange-400{% endif %} text-[10px]" aria-hidden="true"></i>
+            <span class="{% if row.expiry_info.is_today %}text-red-500{% else %}text-orange-500{% endif %} text-[10px] font-bold uppercase tracking-wider">Termina {{ row.expiry_info.label }}</span>
+          </span>
+          {% endif %}
+
+          <div class="mt-auto pt-2">
+            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">A partir de</span>
+            <div class="flex items-baseline gap-1.5">
+              {% if row.best_price %}
+              <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">R$ {{ row.best_price|localize }}</span>
+              {% if row.has_discount and row.regular_price %}
+              <span class="text-xs lg:text-sm font-semibold text-slate-400 line-through">R$ {{ row.regular_price|localize }}</span>
+              {% endif %}
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </a>
+
+    <div class="flex items-center justify-between px-3 pb-3 lg:px-4 lg:pb-4 bg-white mt-1">
+
+      <div class="bg-white rounded-full p-1 flex items-center gap-1.5 shadow-sm border border-slate-100/50">
+        <form method="post" action="{% url 'deals:post-vote' row.post.pk %}" onclick="event.stopPropagation()" class="flex">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+          <input type="hidden" name="direction" value="down">
+          <button type="submit"
+            class="flex items-center justify-center w-7 h-7 rounded-full {% if row.user_vote == 'down' %}bg-blue-50{% else %}hover:bg-blue-50{% endif %} transition-colors cursor-pointer"
+            aria-label="Votar negativo">
+            <i class="fa-solid fa-tag {% if row.user_vote == 'down' %}text-blue-500{% else %}text-blue-400{% endif %} text-xs" aria-hidden="true"></i>
+          </button>
+        </form>
+
+        <span class="{% if row.temperature >= 0 %}text-orange-500{% else %}text-blue-400{% endif %} font-bold text-xs lg:text-sm tabular-nums">{{ row.temperature }}°</span>
+
+        <form method="post" action="{% url 'deals:post-vote' row.post.pk %}" onclick="event.stopPropagation()" class="flex">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+          <input type="hidden" name="direction" value="up">
+          <button type="submit"
+            class="flex items-center justify-center w-7 h-7 rounded-full {% if row.user_vote == 'up' %}bg-orange-50{% else %}hover:bg-orange-50{% endif %} transition-colors cursor-pointer"
+            aria-label="Votar positivo">
+            <i class="fa-solid fa-tags {% if row.user_vote == 'up' %}text-orange-500{% else %}text-orange-400{% endif %} text-xs" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+
+      <a href="{% url 'deals:post-detail' row.post.pk %}" class="bg-[#111118] text-white rounded-full px-4 py-1.5 text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-md no-underline">
+        Ver oferta
+        <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+      </a>
+
+    </div>
+  </article>
+</div>

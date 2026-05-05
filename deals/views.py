@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import F, Prefetch
+from django.db.models import F, Min, Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -28,6 +28,8 @@ PRICE_KEY_LABELS = {
     "priceApp": "App",
     "priceCreditCardClub": "Clube",
 }
+
+VALID_SORTS = {"featured", "recent", "trending", "cheapest"}
 
 
 def _snapshot_value(snapshot, price_key):
@@ -80,7 +82,6 @@ _SORT_ORDERS = {
     "trending": ["-snapshots__discount_pct", "name"],
     "cheapest": ["snapshots__sale_price", "snapshots__regular_price", "name"],
 }
-VALID_SORTS = set(_SORT_ORDERS)
 
 
 def _get_products(store_slug, state, city, today, sort="featured"):
@@ -122,12 +123,187 @@ def _resolve_filter(request, param_name, cookie_name):
     return request.COOKIES.get(cookie_name, "").strip()
 
 
+# ---------------------------------------------------------------------------
+# Post feed helpers
+# ---------------------------------------------------------------------------
+
+SESSION_POST_VOTES_KEY = "post_votes"
+
+_TEMP_HOT_THRESHOLD = 1
+_TEMP_COLD_THRESHOLD = -1
+
+_DISCOUNT_TYPE_DISPLAY = {
+    "regular": {
+        "label": "Preço normal",
+        "icon": "tag",
+        "icon_color": "#9ca3af",
+        "accent_color": "#e5e7eb",
+    },
+    "discounted": {
+        "label": "Oferta",
+        "icon": "percent",
+        "icon_color": "#ef4444",
+        "accent_color": "#fca5a5",
+    },
+    "app": {
+        "label": "Preço App",
+        "icon": "mobile-screen",
+        "icon_color": "#f97316",
+        "accent_color": "#fdba74",
+    },
+    "creditCard": {
+        "label": "Clube",
+        "icon": "credit-card",
+        "icon_color": "#3b82f6",
+        "accent_color": "#93c5fd",
+    },
+}
+
+
+def get_expiry_info(expires_at):
+    if expires_at is None:
+        return None
+    today = timezone.localdate()
+    delta = (expires_at - today).days
+    if delta < 0:
+        return None
+    if delta == 0:
+        return {"label": "hoje", "is_today": True}
+    if delta == 1:
+        return {"label": "amanhã", "is_today": False}
+    return {"label": f"em {delta} dias", "is_today": False}
+
+
+def get_relative_time(posted_at):
+    diff = int((timezone.now() - posted_at).total_seconds())
+    if diff < 60:
+        return f"{diff} s"
+    if diff < 3600:
+        return f"{diff // 60} min"
+    if diff < 86400:
+        return f"{diff // 3600} h"
+    return f"{diff // 86400} d"
+
+
+def _get_user_post_vote(request, post_id):
+    if request.user.is_authenticated:
+        return (
+            PostVote.objects.filter(post_id=post_id, user=request.user)
+            .values_list("direction", flat=True)
+            .first()
+        )
+    return request.session.get(SESSION_POST_VOTES_KEY, {}).get(str(post_id))
+
+
+def _post_best_price(prices):
+    if not prices:
+        return None
+    return min(p.amount for p in prices)
+
+
+def _post_regular_price(prices):
+    for p in prices:
+        if p.discount_type == "regular":
+            return p.amount
+    return None
+
+
+def _build_post_row(post, user_vote):
+    prices = list(post.prices.all())
+    best_price = _post_best_price(prices)
+    regular_price = _post_regular_price(prices)
+    has_discount = regular_price is not None and best_price is not None and best_price < regular_price
+    discount_pct = None
+    if has_discount:
+        discount_pct = int(round((regular_price - best_price) / regular_price * 100))
+    temp = post.temperature
+    if temp >= _TEMP_HOT_THRESHOLD:
+        temp_class = "hot"
+    elif temp <= _TEMP_COLD_THRESHOLD:
+        temp_class = "cold"
+    else:
+        temp_class = "neutral"
+
+    price_rows = []
+    for price in prices:
+        config = _DISCOUNT_TYPE_DISPLAY.get(price.discount_type, _DISCOUNT_TYPE_DISPLAY["regular"])
+        is_best = best_price is not None and price.amount == best_price and len(prices) > 1
+        is_regular_with_better = (
+            price.discount_type == "regular"
+            and best_price is not None
+            and best_price < price.amount
+        )
+        savings = None
+        if price.discount_type != "regular" and regular_price and price.amount < regular_price:
+            savings = int(round((regular_price - price.amount) / regular_price * 100))
+        price_rows.append({
+            "price": price,
+            "amount": price.amount,
+            "discount_type": price.discount_type,
+            "is_best": is_best,
+            "is_regular_with_better": is_regular_with_better,
+            "savings": savings,
+            **config,
+        })
+
+    return {
+        "post": post,
+        "product": post.product,
+        "store_name": post.store.name,
+        "prices": prices,
+        "price_rows": price_rows,
+        "best_price": best_price,
+        "regular_price": regular_price,
+        "has_discount": has_discount,
+        "discount_pct": discount_pct,
+        "expiry_info": get_expiry_info(post.expires_at),
+        "relative_time": get_relative_time(post.posted_at),
+        "temperature": post.temperature,
+        "user_vote": user_vote,
+        "temp_class": temp_class,
+    }
+
+
+def _get_home_post_rows(request, store_slug, state, city, sort="featured"):
+    qs = (
+        Post.objects.filter(is_active=True)
+        .select_related("product__brand", "store")
+        .prefetch_related("prices")
+    )
+    if store_slug:
+        qs = qs.filter(store__slug=store_slug)
+    if state:
+        qs = qs.filter(store__address__state=state)
+    if city:
+        qs = qs.filter(store__address__city=city)
+
+    if sort == "recent":
+        qs = qs.order_by("-posted_at")
+    elif sort == "trending":
+        qs = qs.order_by("-temperature", "-posted_at")
+    elif sort == "cheapest":
+        qs = qs.annotate(min_price=Min("prices__amount")).order_by("min_price")
+    else:  # featured default
+        qs = qs.order_by("-posted_at", "-temperature")
+
+    posts = list(qs)
+    if request.user.is_authenticated:
+        vote_map = dict(
+            PostVote.objects.filter(user=request.user, post_id__in=[p.pk for p in posts])
+            .values_list("post_id", "direction")
+        )
+    else:
+        raw = request.session.get(SESSION_POST_VOTES_KEY, {})
+        vote_map = {int(k): v for k, v in raw.items()}
+
+    return [_build_post_row(post, vote_map.get(post.pk)) for post in posts]
+
+
 class HomeView(TemplateView):
     template_name = "index.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        today = timezone.localdate()
         store_slug = self.request.GET.get("store", "")
         selected_state = _resolve_filter(self.request, "state", STATE_COOKIE)
         selected_city = _resolve_filter(self.request, "city", CITY_COOKIE)
@@ -139,8 +315,9 @@ class HomeView(TemplateView):
             selected_city = ""
 
         ctx["stores"] = Store.objects.filter(is_active=True)
-        ctx["featured"] = _get_featured(store_slug, selected_state, selected_city, today)
-        ctx["products"] = _get_products(store_slug, selected_state, selected_city, today, sort)
+        ctx["post_rows"] = _get_home_post_rows(
+            self.request, store_slug, selected_state, selected_city, sort
+        )
         ctx["selected_store"] = store_slug
         ctx["selected_sort"] = sort
         ctx["states"] = states
@@ -148,7 +325,6 @@ class HomeView(TemplateView):
         ctx["cities_by_state"] = cities_by_state
         ctx["selected_state"] = selected_state
         ctx["selected_city"] = selected_city
-        ctx["today"] = today
         return ctx
 
     def render_to_response(self, context, **response_kwargs):
@@ -407,6 +583,13 @@ def notification_mark_all(request):
     return redirect(reverse("deals:notification-list"))
 
 
+@require_POST
+@login_required
+def notification_clear_all(request):
+    Notification.objects.filter(user=request.user).delete()
+    return redirect(reverse("deals:notification-list"))
+
+
 class SavedListListView(TemplateView):
     template_name = "deals/saved_lists.html"
 
@@ -416,13 +599,12 @@ class SavedListListView(TemplateView):
             ctx["lists"] = []
             return ctx
         lists = SavedList.objects.filter(user=self.request.user).prefetch_related("items__product")
-        latest_snapshots = PriceSnapshot.objects.order_by("-date", "-scraped_at")
         annotated = []
         for saved in lists:
             total = Decimal("0")
             for item in saved.items.all():
                 product = item.product
-                snapshot = product.snapshots.order_by("-date", "-scraped_at").first() if not hasattr(product, "_cached_snap") else product._cached_snap
+                snapshot = product.snapshots.order_by("-date", "-scraped_at").first()
                 value = _snapshot_value(snapshot, item.selected_price_key) or Decimal("0")
                 total += value * item.quantity
             annotated.append({
@@ -524,100 +706,12 @@ class StoreDetailView(DetailView):
 # Post feed
 # ---------------------------------------------------------------------------
 
-SESSION_POST_VOTES_KEY = "post_votes"
-
-_TEMP_HOT_THRESHOLD = 1
-_TEMP_COLD_THRESHOLD = -1
-
-
-def get_expiry_info(expires_at):
-    """Python equivalent of getExpiryInfo() from the mobile app."""
-    if expires_at is None:
-        return None
-    today = timezone.localdate()
-    delta = (expires_at - today).days
-    if delta < 0:
-        return None
-    if delta == 0:
-        return {"label": "hoje", "is_today": True}
-    if delta == 1:
-        return {"label": "amanhã", "is_today": False}
-    return {"label": f"em {delta} dias", "is_today": False}
-
-
-def get_relative_time(posted_at):
-    """Python equivalent of getRelativeTime() from the mobile app."""
-    diff = int((timezone.now() - posted_at).total_seconds())
-    if diff < 60:
-        return f"{diff} s"
-    if diff < 3600:
-        return f"{diff // 60} min"
-    if diff < 86400:
-        return f"{diff // 3600} h"
-    return f"{diff // 86400} d"
-
-
-def _get_user_post_vote(request, post_id):
-    if request.user.is_authenticated:
-        return (
-            PostVote.objects.filter(post_id=post_id, user=request.user)
-            .values_list("direction", flat=True)
-            .first()
-        )
-    return request.session.get(SESSION_POST_VOTES_KEY, {}).get(str(post_id))
-
-
-def _post_best_price(prices):
-    if not prices:
-        return None
-    return min(p.amount for p in prices)
-
-
-def _post_regular_price(prices):
-    for p in prices:
-        if p.discount_type == "regular":
-            return p.amount
-    return None
-
-
-def _build_post_row(post, user_vote):
-    prices = list(post.prices.all())
-    best_price = _post_best_price(prices)
-    regular_price = _post_regular_price(prices)
-    has_discount = regular_price is not None and best_price is not None and best_price < regular_price
-    discount_pct = None
-    if has_discount:
-        discount_pct = int(round((regular_price - best_price) / regular_price * 100))
-    temp = post.temperature
-    if temp >= _TEMP_HOT_THRESHOLD:
-        temp_class = "hot"
-    elif temp <= _TEMP_COLD_THRESHOLD:
-        temp_class = "cold"
-    else:
-        temp_class = "neutral"
-    return {
-        "post": post,
-        "product": post.product,
-        "store_name": post.store.name,
-        "prices": prices,
-        "best_price": best_price,
-        "regular_price": regular_price,
-        "has_discount": has_discount,
-        "discount_pct": discount_pct,
-        "expiry_info": get_expiry_info(post.expires_at),
-        "relative_time": get_relative_time(post.posted_at),
-        "temperature": post.temperature,
-        "user_vote": user_vote,
-        "temp_class": temp_class,
-    }
-
-
-VALID_POST_SORTS = {"recent", "trending", "expiring"}
+VALID_POST_SORTS = {"featured", "recent", "trending", "cheapest"}
 
 _POST_SORT_ORDERS = {
+    "featured": ["-posted_at", "-temperature"],
     "recent": ["-posted_at"],
     "trending": ["-temperature", "-posted_at"],
-    "expiring": ["expires_at", "-posted_at"],
 }
 
 
@@ -626,32 +720,35 @@ class PostListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        sort = self.request.GET.get("sort", "recent")
+        sort = self.request.GET.get("sort", "featured")
         if sort not in VALID_POST_SORTS:
-            sort = "recent"
+            sort = "featured"
         store_slug = self.request.GET.get("store", "")
-        order = _POST_SORT_ORDERS[sort]
+
         qs = (
             Post.objects.filter(is_active=True)
             .select_related("product__brand", "store")
             .prefetch_related("prices")
-            .order_by(*order)
         )
         if store_slug:
             qs = qs.filter(store__slug=store_slug)
-        session_votes = self.request.session.get(SESSION_POST_VOTES_KEY, {})
-        rows = []
-        for post in qs:
-            if self.request.user.is_authenticated:
-                user_vote = (
-                    PostVote.objects.filter(post=post, user=self.request.user)
-                    .values_list("direction", flat=True)
-                    .first()
-                )
-            else:
-                user_vote = session_votes.get(str(post.pk))
-            rows.append(_build_post_row(post, user_vote))
-        ctx["rows"] = rows
+
+        if sort == "cheapest":
+            qs = qs.annotate(min_price=Min("prices__amount")).order_by("min_price")
+        else:
+            qs = qs.order_by(*_POST_SORT_ORDERS[sort])
+
+        posts = list(qs)
+        if self.request.user.is_authenticated:
+            vote_map = dict(
+                PostVote.objects.filter(user=self.request.user, post_id__in=[p.pk for p in posts])
+                .values_list("post_id", "direction")
+            )
+        else:
+            raw = self.request.session.get(SESSION_POST_VOTES_KEY, {})
+            vote_map = {int(k): v for k, v in raw.items()}
+
+        ctx["rows"] = [_build_post_row(post, vote_map.get(post.pk)) for post in posts]
         ctx["selected_sort"] = sort
         ctx["stores"] = Store.objects.filter(is_active=True)
         ctx["selected_store"] = store_slug

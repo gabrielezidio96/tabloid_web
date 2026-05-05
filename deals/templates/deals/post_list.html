@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}Ofertas — Tabloid{% endblock %}
+
+{% block content %}
+<div class="px-4 lg:px-0 pb-4 flex items-center gap-3">
+  <a href="{% url 'deals:home' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 no-underline">
+    <i class="fa-solid fa-arrow-left text-gray-700 text-sm" aria-hidden="true"></i>
+  </a>
+  <div class="flex-1">
+    <h1 class="text-lg font-bold text-gray-900">Ofertas</h1>
+    <span class="text-xs text-gray-400">{{ rows|length }} oferta{{ rows|length|pluralize:"s" }}</span>
+  </div>
+</div>
+
+<div class="flex px-4 lg:px-0 gap-2 mb-4 overflow-x-auto scrollbar-none">
+  {% with store=selected_store|urlencode %}
+  <a href="?sort=featured{% if store %}&store={{ store }}{% endif %}"
+    class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold {% if selected_sort == 'featured' %}bg-gray-900 text-white{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+    Destaques
+  </a>
+  <a href="?sort=recent{% if store %}&store={{ store }}{% endif %}"
+    class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'recent' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+    Recentes
+  </a>
+  <a href="?sort=trending{% if store %}&store={{ store }}{% endif %}"
+    class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'trending' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-fire" aria-hidden="true"></i>
+    Em alta
+  </a>
+  <a href="?sort=cheapest{% if store %}&store={{ store }}{% endif %}"
+    class="shrink-0 no-underline inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs {% if selected_sort == 'cheapest' %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+    Menor preço
+  </a>
+  {% endwith %}
+</div>
+
+{% if stores %}
+<div class="flex items-center overflow-x-auto pb-2 px-4 lg:px-0 gap-2 mb-4 scrollbar-none">
+  <a href="?sort={{ selected_sort }}"
+    class="shrink-0 no-underline inline-flex items-center rounded-full px-3.5 py-1.5 text-xs {% if not selected_store %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    Todas
+  </a>
+  {% for s in stores %}
+  <a href="?sort={{ selected_sort }}&store={{ s.slug }}"
+    class="shrink-0 no-underline inline-flex items-center rounded-full px-3.5 py-1.5 text-xs {% if selected_store == s.slug %}bg-gray-900 text-white font-bold{% else %}bg-white border border-gray-200 text-gray-500 font-medium{% endif %}">
+    {{ s.name }}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if rows %}
+<div class="pt-2 pb-8">
+  {% for row in rows %}
+  {% include "partials/post_card.html" with row=row %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center gap-4 px-8 py-16">
+  <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+    <i class="fa-solid fa-tag text-gray-300 text-3xl" aria-hidden="true"></i>
+  </div>
+  <span class="text-lg font-bold text-gray-900 text-center">Nenhuma oferta encontrada</span>
+  <span class="text-sm text-gray-400 text-center">Tente outro filtro ou volte mais tarde.</span>
+</div>
+{% endif %}
+{% endblock %}

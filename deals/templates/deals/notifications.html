@@ -17,6 +17,12 @@
     <button type="submit" class="text-blue-500 text-sm font-semibold cursor-pointer">Marcar todas</button>
   </form>
   {% endif %}
+  {% if notifications %}
+  <form method="post" action="{% url 'deals:notification-clear-all' %}">
+    {% csrf_token %}
+    <button type="submit" class="text-red-400 text-sm font-semibold cursor-pointer">Limpar tudo</button>
+  </form>
+  {% endif %}
 </div>
 
 {% if not notifications %}

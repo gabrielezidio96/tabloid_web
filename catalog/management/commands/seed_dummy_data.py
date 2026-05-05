@@ -1,3 +1,4 @@
+import random
 from datetime import date, timedelta
 
 from django.contrib.gis.geos import Point
@@ -7,6 +8,7 @@ from django.core.management.base import BaseCommand
 from stores.models import Store, StoreAddress
 
 from catalog.models import Brand, Category, DailyFeatured, PriceSnapshot, Product
+from deals.models import Post, PostPrice
 
 
 STORES = [
@@ -643,6 +645,30 @@ class Command(BaseCommand):
                     date=today,
                     snapshot=snapshot,
                     defaults={"store": store, "rank": rank_by_store[slug]},
+                )
+
+            # Create Post and PostPrices for the post-based feed
+            temperature = random.randint(5, 80) if p["is_featured"] else random.randint(-10, 30)
+            expires_at = today + timedelta(days=random.randint(3, 10)) if p.get("is_featured") else None
+            post, _ = Post.objects.get_or_create(
+                product=product,
+                store=store,
+                defaults={
+                    "temperature": temperature,
+                    "expires_at": expires_at,
+                    "is_active": True,
+                },
+            )
+            PostPrice.objects.get_or_create(
+                post=post,
+                discount_type="regular",
+                defaults={"amount": p["regular_price"], "currency": "BRL"},
+            )
+            if p.get("sale_price"):
+                PostPrice.objects.get_or_create(
+                    post=post,
+                    discount_type="discounted",
+                    defaults={"amount": p["sale_price"], "currency": "BRL"},
                 )
 
         self.stdout.write(self.style.SUCCESS("Done. Dummy data seeded successfully."))

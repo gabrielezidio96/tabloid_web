@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}{{ product.name }} — Tabloid{% endblock %}
+
+{% block content %}
+<div class="-mt-3">
+
+  <div class="relative">
+    {% if product.thumb_image_url or product.image_url %}
+    <img src="{{ product.thumb_image_url|default:product.image_url }}" alt="{{ product.name }}"
+      class="w-full h-[340px] object-cover">
+    {% else %}
+    <div class="w-full h-[340px] bg-gray-100 flex items-center justify-center text-gray-300 text-6xl">
+      <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+    </div>
+    {% endif %}
+
+    <a href="{% url 'deals:post-list' %}" class="absolute left-4 top-4 bg-black/30 rounded-full p-2.5 no-underline" aria-label="Voltar">
+      <i class="fa-solid fa-arrow-left text-white text-sm" aria-hidden="true"></i>
+    </a>
+
+    <a href="{% url 'deals:cart' %}" class="absolute right-4 top-4 bg-black/30 rounded-full p-2.5 no-underline" aria-label="Carrinho">
+      <i class="fa-solid fa-cart-shopping text-white text-sm" aria-hidden="true"></i>
+    </a>
+
+    {% if post.limited_unit %}
+    <span class="absolute left-16 top-4 bg-red-500 rounded-full px-3 py-1.5 text-white text-xs font-bold">Restam {{ post.limited_unit }}</span>
+    {% endif %}
+  </div>
+
+  <div class="-mt-8 bg-cream rounded-t-[32px] pt-3">
+    <div class="flex justify-center pb-5">
+      <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+    </div>
+
+    <div class="px-5 flex flex-col gap-6 pb-32">
+
+      <div class="flex flex-col gap-2">
+        {% if product.brand %}
+        <span class="self-start inline-flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1">
+          <span class="text-xs font-semibold uppercase tracking-widest text-gray-500">{{ product.brand.name }}</span>
+        </span>
+        {% endif %}
+
+        <h1 class="text-2xl font-bold leading-tight text-gray-900">{{ product.name }}</h1>
+
+        <div class="flex flex-wrap items-center gap-2 mt-1">
+          <div class="flex items-center gap-1 bg-slate-50 rounded-lg px-2 py-1">
+            <span class="text-xs font-bold text-slate-700">{{ store_name }}</span>
+            <i class="fa-solid fa-circle-check text-blue-500 text-[10px]" aria-hidden="true"></i>
+          </div>
+          <span class="text-xs text-gray-400">{{ relative_time }}</span>
+          {% if expiry_info %}
+          <span class="inline-flex items-center gap-1.5 {% if expiry_info.is_today %}bg-red-50{% else %}bg-[#fff6e5]{% endif %} rounded-lg px-2 py-1">
+            <i class="fa-regular fa-clock {% if expiry_info.is_today %}text-red-400{% else %}text-orange-400{% endif %} text-[10px]" aria-hidden="true"></i>
+            <span class="{% if expiry_info.is_today %}text-red-500{% else %}text-orange-500{% endif %} text-[10px] font-bold uppercase tracking-wider">Termina {{ expiry_info.label }}</span>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if price_rows %}
+      <div class="flex flex-col gap-3">
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Preços disponíveis</span>
+        {% for pr in price_rows %}
+        <div class="bg-white rounded-2xl"
+          style="{% if pr.is_best %}border: 1.5px solid {{ pr.accent_color }}; box-shadow: 0 4px 16px {{ pr.icon_color }}2e;{% else %}box-shadow: 0 4px 8px rgba(0,0,0,0.06);{% endif %}">
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-[42px] h-[42px] rounded-xl flex items-center justify-center"
+                style="background-color: {{ pr.icon_color }}18;">
+                <i class="fa-solid fa-{{ pr.icon }} text-base" style="color: {{ pr.icon_color }};" aria-hidden="true"></i>
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-semibold {% if pr.is_regular_with_better %}text-gray-400{% else %}text-gray-700{% endif %}">{{ pr.label }}</span>
+                {% if pr.savings %}
+                <span class="self-start inline-flex items-center gap-1 bg-green-50 rounded-lg px-1.5 py-0.5">
+                  <i class="fa-solid fa-arrow-down text-green-600 text-[8px]" aria-hidden="true"></i>
+                  <span class="text-green-700 text-xs font-bold">{{ pr.savings }}% off</span>
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              {% if pr.is_best %}
+              <span class="rounded-lg px-2 py-0.5 text-xs font-bold"
+                style="color: {{ pr.icon_color }}; background-color: {{ pr.icon_color }}18;">Melhor preço</span>
+              {% endif %}
+              <span
+                class="{% if pr.is_regular_with_better %}text-sm text-gray-300 line-through{% else %}text-2xl font-extrabold{% endif %}"
+                {% if not pr.is_regular_with_better %}style="color: {{ pr.icon_color }};"{% endif %}>R$ {{ pr.amount|localize }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-500">Sem preço disponível.</p>
+      {% endif %}
+
+      <div class="flex flex-col gap-3">
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Esta oferta é boa?</span>
+        <div class="flex items-center gap-3">
+          <form method="post" action="{% url 'deals:post-vote' post.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="direction" value="up">
+            <button type="submit"
+              class="flex items-center gap-2 px-5 py-3 rounded-2xl {% if user_vote == 'up' %}bg-green-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} font-bold text-sm cursor-pointer">
+              <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+              Sim
+            </button>
+          </form>
+          <form method="post" action="{% url 'deals:post-vote' post.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="direction" value="down">
+            <button type="submit"
+              class="flex items-center gap-2 px-5 py-3 rounded-2xl {% if user_vote == 'down' %}bg-red-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} font-bold text-sm cursor-pointer">
+              <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+              Não
+            </button>
+          </form>
+          <div class="ml-auto flex items-center gap-2 {% if temp_class == 'hot' %}text-orange-500{% elif temp_class == 'cold' %}text-blue-500{% else %}text-gray-400{% endif %}">
+            {% if temp_class == 'hot' %}<i class="fa-solid fa-fire" aria-hidden="true"></i>{% elif temp_class == 'cold' %}<i class="fa-solid fa-snowflake" aria-hidden="true"></i>{% endif %}
+            <span class="font-bold text-lg">{{ temperature }}°</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 px-5 py-3">
+  <div class="max-w-3xl mx-auto flex items-center gap-3">
+    <form method="post" action="{% url 'deals:cart-add' product.pk %}" class="flex items-center gap-3 flex-1">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'deals:cart' %}">
+      <div class="flex items-center gap-3 bg-gray-100 rounded-xl px-3 py-3">
+        <button type="button" onclick="var i=this.nextElementSibling;i.value=Math.max(1,parseInt(i.value||'1')-1)" class="cursor-pointer">
+          <i class="fa-solid fa-minus text-gray-700 text-[10px]" aria-hidden="true"></i>
+        </button>
+        <input type="number" name="qty" value="1" min="1"
+          class="text-sm font-bold w-12 text-center bg-transparent border-0 focus:outline-none">
+        <button type="button" onclick="var i=this.previousElementSibling;i.value=parseInt(i.value||'1')+1" class="cursor-pointer">
+          <i class="fa-solid fa-plus text-gray-700 text-[10px]" aria-hidden="true"></i>
+        </button>
+      </div>
+      <button type="submit"
+        class="flex-1 rounded-2xl py-4 bg-gray-900 text-white text-base font-bold flex items-center justify-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-cart-shopping text-sm" aria-hidden="true"></i>
+        {% if best_price %}Adicionar — R$ {{ best_price|localize }}{% else %}Adicionar à lista{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
