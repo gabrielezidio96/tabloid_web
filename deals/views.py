@@ -791,7 +791,7 @@ def post_vote(request, pk):
                 post.temperature = F("temperature") - delta
                 existing.delete()
             else:
-                post.temperature = F("temperature") + delta * 2
+                post.temperature = F("temperature") + delta
                 existing.direction = direction
                 existing.save(update_fields=["direction"])
         else:
@@ -806,7 +806,7 @@ def post_vote(request, pk):
             post.temperature = F("temperature") - delta
             votes.pop(key)
         elif existing:
-            post.temperature = F("temperature") + delta * 2
+            post.temperature = F("temperature") + delta
             votes[key] = direction
         else:
             post.temperature = F("temperature") + delta
