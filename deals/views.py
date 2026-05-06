@@ -332,6 +332,15 @@ class HomeView(TemplateView):
             selected_city = ""
 
         ctx["stores"] = Store.objects.active_in_vertical(vertical)
+        categories = list(Category.objects.for_vertical(vertical))
+        product_filter = {"store__vertical": vertical} if vertical else {}
+        ctx["categories"] = [
+            {
+                "category": cat,
+                "href": reverse("deals:category-detail", kwargs={"slug": cat.slug}),
+            }
+            for cat in categories
+        ]
         ctx["post_rows"] = _get_home_post_rows(
             self.request, store_slug, selected_state, selected_city, sort
         )

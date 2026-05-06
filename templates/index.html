@@ -16,6 +16,22 @@
   </div>
 </section>
 
+{% if categories %}
+<div class="h-px bg-gray-200 mx-4 lg:mx-0 mb-5 lg:mb-8"></div>
+
+<section class="mb-5 lg:mb-8">
+  <div class="flex items-center justify-between px-4 lg:px-0 mb-3 lg:mb-4">
+    <h2 class="text-lg lg:text-xl font-bold text-gray-900">Categorias</h2>
+    <a href="{% url 'deals:category-list' %}" class="no-underline inline-flex items-center rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase bg-white border border-gray-200 text-gray-700">Ver todas</a>
+  </div>
+  <div class="flex items-start overflow-x-auto pb-2 scrollbar-none">
+    {% for item in categories %}
+    {% include "partials/category_card.html" with category=item.category href=item.href %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <div class="h-px bg-gray-200 mx-4 lg:mx-0 mb-5 lg:mb-8"></div>
 
 <section class="mb-4">
