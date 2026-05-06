@@ -35,8 +35,8 @@
     row.addEventListener('click', function () { select(row); });
   });
 
-  var best = document.querySelector('.price-row[data-best="true"]');
-  select(best || rows[0]);
+  var normal = Array.from(rows).find(function (r) { return r.dataset.label === 'Preço Normal'; });
+  select(normal || rows[0]);
 
   document.querySelectorAll('.qty-dec').forEach(function (btn) {
     btn.addEventListener('click', function () {

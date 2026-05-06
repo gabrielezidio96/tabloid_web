@@ -1,7 +1,7 @@
 {# Args: category, ring_color (hex string), href #}
 <a href="{{ href|default:'#' }}" class="shrink-0 mx-2.5 flex flex-col items-center no-underline">
-  <div class="rounded-full" style="background-color: {{ ring_color|default:'#f97316' }}; padding: 2.5px;">
-    <div class="rounded-full" style="background-color: #faf8f5; padding: 2px;">
+  <div class="rounded-full" style="background-color: {{ ring_color|default:'var(--color-accent-orange)' }}; padding: 2.5px;">
+    <div class="rounded-full bg-cream" style="padding: 2px;">
       {% if category.image_url %}
       <img src="{{ category.image_url }}" alt="{{ category.name }}" class="w-16 h-16 rounded-full object-cover">
       {% else %}

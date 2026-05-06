@@ -101,6 +101,12 @@
     --default-mono-font-family: var(--font-mono);
     --color-brand: #ef4444;
     --color-cream: #faf8f5;
+    --color-surface-orange: #fff7ed;
+    --color-expiry-today-text: #dc2626;
+    --color-expiry-today-bg: #fee2e2;
+    --color-expiry-soon-text: #d97706;
+    --color-button-dark: #111827;
+    --color-accent-orange: #f97316;
   }
 }
 @layer base {
@@ -336,8 +342,14 @@
       max-width: 96rem;
     }
   }
+  .mx-1 {
+    margin-inline: calc(var(--spacing) * 1);
+  }
   .mx-1\.5 {
     margin-inline: calc(var(--spacing) * 1.5);
+  }
+  .mx-2 {
+    margin-inline: calc(var(--spacing) * 2);
   }
   .mx-2\.5 {
     margin-inline: calc(var(--spacing) * 2.5);
@@ -356,6 +368,9 @@
   }
   .-mt-8 {
     margin-top: calc(var(--spacing) * -8);
+  }
+  .mt-0 {
+    margin-top: calc(var(--spacing) * 0);
   }
   .mt-0\.5 {
     margin-top: calc(var(--spacing) * 0.5);
@@ -377,6 +392,12 @@
   }
   .mt-px {
     margin-top: 1px;
+  }
+  .mr-2 {
+    margin-right: calc(var(--spacing) * 2);
+  }
+  .mb-0 {
+    margin-bottom: calc(var(--spacing) * 0);
   }
   .mb-0\.5 {
     margin-bottom: calc(var(--spacing) * 0.5);
@@ -401,6 +422,9 @@
   }
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
+  }
+  .-ml-1 {
+    margin-left: calc(var(--spacing) * -1);
   }
   .-ml-1\.5 {
     margin-left: calc(var(--spacing) * -1.5);
@@ -441,6 +465,9 @@
   }
   .inline-flex {
     display: inline-flex;
+  }
+  .table {
+    display: table;
   }
   .aspect-square {
     aspect-ratio: 1 / 1;
@@ -607,8 +634,14 @@
   .flex-1 {
     flex: 1;
   }
+  .flex-shrink {
+    flex-shrink: 1;
+  }
   .shrink-0 {
     flex-shrink: 0;
+  }
+  .border-collapse {
+    border-collapse: collapse;
   }
   .-translate-x-full {
     --tw-translate-x: -100%;
@@ -652,6 +685,9 @@
   }
   .justify-center {
     justify-content: center;
+  }
+  .gap-0 {
+    gap: calc(var(--spacing) * 0);
   }
   .gap-0\.5 {
     gap: calc(var(--spacing) * 0.5);
@@ -775,6 +811,9 @@
   .border-slate-50 {
     border-color: var(--color-slate-50);
   }
+  .border-slate-100 {
+    border-color: var(--color-slate-100);
+  }
   .border-slate-100\/50 {
     border-color: color-mix(in srgb, oklch(96.8% 0.007 247.896) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -789,6 +828,9 @@
   }
   .bg-amber-100 {
     background-color: var(--color-amber-100);
+  }
+  .bg-black {
+    background-color: var(--color-black);
   }
   .bg-black\/30 {
     background-color: color-mix(in srgb, #000 30%, transparent);
@@ -814,8 +856,14 @@
   .bg-brand {
     background-color: var(--color-brand);
   }
+  .bg-button-dark {
+    background-color: var(--color-button-dark);
+  }
   .bg-cream {
     background-color: var(--color-cream);
+  }
+  .bg-expiry-today-bg {
+    background-color: var(--color-expiry-today-bg);
   }
   .bg-gray-50 {
     background-color: var(--color-gray-50);
@@ -867,6 +915,9 @@
   }
   .bg-slate-50 {
     background-color: var(--color-slate-50);
+  }
+  .bg-surface-orange {
+    background-color: var(--color-surface-orange);
   }
   .bg-transparent {
     background-color: transparent;
@@ -928,6 +979,9 @@
   .px-0\.5 {
     padding-inline: calc(var(--spacing) * 0.5);
   }
+  .px-1 {
+    padding-inline: calc(var(--spacing) * 1);
+  }
   .px-1\.5 {
     padding-inline: calc(var(--spacing) * 1.5);
   }
@@ -954,6 +1008,9 @@
   }
   .px-8 {
     padding-inline: calc(var(--spacing) * 8);
+  }
+  .py-0 {
+    padding-block: calc(var(--spacing) * 0);
   }
   .py-0\.5 {
     padding-block: calc(var(--spacing) * 0.5);
@@ -1150,6 +1207,12 @@
   .text-brand {
     color: var(--color-brand);
   }
+  .text-expiry-soon-text {
+    color: var(--color-expiry-soon-text);
+  }
+  .text-expiry-today-text {
+    color: var(--color-expiry-today-text);
+  }
   .text-gray-200 {
     color: var(--color-gray-200);
   }
@@ -1240,6 +1303,9 @@
   }
   .no-underline {
     text-decoration-line: none;
+  }
+  .underline {
+    text-decoration-line: underline;
   }
   .decoration-gray-300 {
     text-decoration-color: var(--color-gray-300);

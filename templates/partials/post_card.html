@@ -38,9 +38,9 @@
           <span class="text-base lg:text-lg font-bold text-slate-800 leading-snug line-clamp-2 mt-1">{{ row.product.name }}</span>
 
           {% if row.expiry_info %}
-          <span class="self-start inline-flex items-center gap-1.5 rounded-md px-2 py-1 {% if row.expiry_info.is_today %}bg-red-50{% else %}bg-[#fff6e5]{% endif %} mt-0.5">
-            <i class="fa-regular fa-clock {% if row.expiry_info.is_today %}text-red-400{% else %}text-orange-400{% endif %} text-[10px]" aria-hidden="true"></i>
-            <span class="{% if row.expiry_info.is_today %}text-red-500{% else %}text-orange-500{% endif %} text-[10px] font-bold uppercase tracking-wider">Termina {{ row.expiry_info.label }}</span>
+          <span class="self-start inline-flex items-center gap-1.5 rounded-md px-2 py-1 {% if row.expiry_info.is_today %}bg-expiry-today-bg{% else %}bg-surface-orange{% endif %} mt-0.5">
+            <i class="fa-regular fa-clock {% if row.expiry_info.is_today %}text-expiry-today-text{% else %}text-expiry-soon-text{% endif %} text-[10px]" aria-hidden="true"></i>
+            <span class="{% if row.expiry_info.is_today %}text-expiry-today-text{% else %}text-expiry-soon-text{% endif %} text-[10px] font-bold uppercase tracking-wider">Termina {{ row.expiry_info.label }}</span>
           </span>
           {% endif %}
 
@@ -88,7 +88,7 @@
         </form>
       </div>
 
-      <a href="{% url 'deals:post-detail' row.post.pk %}" class="bg-[#111118] text-white rounded-full px-4 py-1.5 text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-md no-underline">
+      <a href="{% url 'deals:post-detail' row.post.pk %}" class="bg-button-dark text-white rounded-full px-4 py-1.5 text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-md no-underline">
         Ver oferta
         <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
       </a>
