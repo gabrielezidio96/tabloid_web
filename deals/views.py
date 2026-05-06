@@ -139,6 +139,11 @@ SESSION_POST_VOTES_KEY = "post_votes"
 _TEMP_HOT_THRESHOLD = 1
 _TEMP_COLD_THRESHOLD = -1
 
+_SOURCE_DISPLAY = {
+    "store": {"label": "Loja verificada", "icon": "circle-check", "color": "text-blue-500"},
+    "flyer": {"label": "Folheto extraído", "icon": "newspaper", "color": "text-orange-500"},
+}
+
 _DISCOUNT_TYPE_DISPLAY = {
     "regular": {
         "label": "Preço normal",
@@ -257,6 +262,7 @@ def _build_post_row(post, user_vote):
         "post": post,
         "product": post.product,
         "store_name": post.store.name,
+        "source": _SOURCE_DISPLAY.get(post.source, _SOURCE_DISPLAY["store"]),
         "prices": prices,
         "price_rows": price_rows,
         "best_price": best_price,
