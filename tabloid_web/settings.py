@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'storages',
+    'accounts',
     'catalog',
     'deals',
     'stores',
@@ -183,3 +184,14 @@ if _SUPABASE_BUCKET:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ---------------------------------------------------------------------------
+# Auth (Supabase social login)
+# ---------------------------------------------------------------------------
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000').rstrip('/')
+
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

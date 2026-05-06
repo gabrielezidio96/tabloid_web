@@ -85,6 +85,19 @@
           <span class="absolute -top-2 -right-2 min-w-4 h-4 px-0.5 rounded-full text-white text-xs font-bold flex items-center justify-center leading-none" style="background-color: var(--brand);">{{ cart_count }}</span>
           {% endif %}
         </a>
+        {% if user.is_authenticated %}
+        <label for="drawer-toggle" class="cursor-pointer no-underline" aria-label="Conta">
+          <span class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background-color: var(--brand);">{{ user.first_name|slice:":1"|upper|default:user.email|slice:":1"|upper }}</span>
+        </label>
+        {% else %}
+        <a href="{% url 'accounts:login' %}" class="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-[color:var(--brand)] no-underline">
+          <i class="fa-regular fa-user text-base" aria-hidden="true"></i>
+          Entrar
+        </a>
+        <a href="{% url 'accounts:login' %}" class="lg:hidden no-underline" aria-label="Entrar">
+          <i class="fa-regular fa-user text-gray-700 text-xl" aria-hidden="true"></i>
+        </a>
+        {% endif %}
       </div>
     </div>
   </header>

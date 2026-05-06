@@ -24,5 +24,6 @@ urlpatterns = [
     path('', include('deals.urls')),
     path("geolocate/", ClosestLocationView.as_view(), name="geolocate"),
     path("switch/<slug:vertical>/", switch_vertical, name="switch-vertical"),
+    path('auth/', include('accounts.urls')),
     path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

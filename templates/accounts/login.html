@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Entrar — {{ vertical_brand_name|default:"Tabloid" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-sm mx-auto px-4 lg:px-0 mt-8 lg:mt-16">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+    <div class="flex flex-col items-center text-center mb-6">
+      <span class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-extrabold text-lg mb-3" style="background-color: var(--brand);">{{ vertical_brand_letter|default:"T" }}</span>
+      <h1 class="text-xl font-bold text-gray-900">Entrar em {{ vertical_brand_name|default:"Tabloid" }}</h1>
+      <p class="text-sm text-gray-500 mt-1">Acesse sua conta para salvar listas e votar nas melhores ofertas.</p>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4 flex flex-col gap-2">
+      {% for message in messages %}
+      <div class="text-sm rounded-lg px-3 py-2 {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-gray-50 text-gray-700{% endif %}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col gap-3">
+      <a href="{% url 'accounts:oauth-start' 'google' %}{% if next %}?next={{ next|urlencode }}{% endif %}"
+         class="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-800 no-underline transition">
+        <i class="fa-brands fa-google text-base" aria-hidden="true"></i>
+        Continuar com Google
+      </a>
+      <a href="{% url 'accounts:oauth-start' 'facebook' %}{% if next %}?next={{ next|urlencode }}{% endif %}"
+         class="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1877F2] hover:bg-[#166FE0] text-sm font-semibold text-white no-underline transition">
+        <i class="fa-brands fa-facebook-f text-base" aria-hidden="true"></i>
+        Continuar com Facebook
+      </a>
+    </div>
+
+    <p class="text-xs text-gray-400 text-center mt-6">Ao continuar, você concorda em receber e-mails ocasionais sobre ofertas.</p>
+  </div>
+</div>
+{% endblock %}
