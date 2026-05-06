@@ -5,9 +5,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Tabloid — Melhores Ofertas{% endblock %}</title>
+  <title>{% block title %}{{ vertical_brand_name|default:"Tabloid" }} — Melhores Ofertas{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/swiper.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/output.css' %}">
+  <link rel="stylesheet" href="{% static 'css/verticals.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <script src="https://unpkg.com/htmx.org@2.0.4"
     integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
@@ -15,7 +16,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-cream text-gray-900 min-h-screen">
+<body class="bg-cream text-gray-900 min-h-screen vertical-{{ vertical|default:'supermarket' }}" data-vertical="{{ vertical|default:'supermarket' }}">
   {% include "partials/drawer_menu.html" %}
 
   <header class="bg-white lg:border-b lg:border-gray-100">
@@ -25,28 +26,41 @@
       </label>
 
       <a href="{% url 'deals:home' %}" class="hidden lg:flex items-center gap-2 no-underline shrink-0">
-        <span class="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center text-white font-extrabold">T</span>
-        <span class="text-lg font-bold text-gray-900">Tabloid</span>
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-extrabold" style="background-color: var(--brand);">{{ vertical_brand_letter|default:"T" }}</span>
+        <span class="text-lg font-bold text-gray-900">{{ vertical_brand_name|default:"Tabloid" }}</span>
       </a>
 
       <nav class="hidden lg:flex items-center gap-6">
-        <a href="{% url 'deals:home' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-red-500">
+        <a href="{% url 'deals:home' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-[color:var(--brand)]">
           <i class="fa-solid fa-house text-gray-500 text-sm" aria-hidden="true"></i>
           Início
         </a>
-        <a href="{% url 'deals:store-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-red-500">
+        <a href="{% url 'deals:store-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-[color:var(--brand)]">
           <i class="fa-solid fa-store text-gray-500 text-sm" aria-hidden="true"></i>
           Lojas
         </a>
-        <a href="{% url 'deals:saved-list-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-red-500">
+        <a href="{% url 'deals:saved-list-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-[color:var(--brand)]">
           <i class="fa-regular fa-rectangle-list text-gray-500 text-sm" aria-hidden="true"></i>
           Minhas listas
         </a>
-        <a href="{% url 'deals:category-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-red-500">
+        <a href="{% url 'deals:category-list' %}" class="flex items-center gap-2 text-sm font-medium text-gray-700 no-underline hover:text-[color:var(--brand)]">
           <i class="fa-solid fa-layer-group text-gray-500 text-sm" aria-hidden="true"></i>
           Categorias
         </a>
       </nav>
+
+      <div class="hidden lg:flex items-center gap-1 ml-2 bg-gray-100 rounded-full p-1">
+        <form method="post" action="{% url 'switch-vertical' 'supermarket' %}" class="inline">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="px-3 py-1 rounded-full text-xs font-semibold transition {% if vertical == 'supermarket' %}bg-white text-gray-900 shadow{% else %}text-gray-600 hover:text-gray-900{% endif %}">Mercado</button>
+        </form>
+        <form method="post" action="{% url 'switch-vertical' 'pharmacy' %}" class="inline">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="px-3 py-1 rounded-full text-xs font-semibold transition {% if vertical == 'pharmacy' %}bg-white text-gray-900 shadow{% else %}text-gray-600 hover:text-gray-900{% endif %}">Farmácia</button>
+        </form>
+      </div>
 
       <div class="flex-1 flex justify-center lg:justify-end">
         <label for="drawer-toggle" class="inline-flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 lg:px-4 lg:py-2 cursor-pointer">
@@ -62,13 +76,13 @@
         <a href="{% url 'deals:notification-list' %}" class="relative no-underline" aria-label="Notificações">
           <i class="fa-regular fa-bell text-gray-700 text-xl" aria-hidden="true"></i>
           {% if unread_notifications_count %}
-          <span class="absolute -top-2 -right-2 min-w-4 h-4 px-0.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center leading-none">{{ unread_notifications_count }}</span>
+          <span class="absolute -top-2 -right-2 min-w-4 h-4 px-0.5 rounded-full text-white text-xs font-bold flex items-center justify-center leading-none" style="background-color: var(--brand);">{{ unread_notifications_count }}</span>
           {% endif %}
         </a>
         <a href="{% url 'deals:cart' %}" class="relative no-underline" aria-label="Carrinho">
           <i class="fa-solid fa-cart-shopping text-gray-700 text-xl" aria-hidden="true"></i>
           {% if cart_count %}
-          <span class="absolute -top-2 -right-2 min-w-4 h-4 px-0.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center leading-none">{{ cart_count }}</span>
+          <span class="absolute -top-2 -right-2 min-w-4 h-4 px-0.5 rounded-full text-white text-xs font-bold flex items-center justify-center leading-none" style="background-color: var(--brand);">{{ cart_count }}</span>
           {% endif %}
         </a>
       </div>

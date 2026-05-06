@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import ClosestLocationView
+from .views import ClosestLocationView, switch_vertical
 
 urlpatterns = [
     path('', include('deals.urls')),
     path("geolocate/", ClosestLocationView.as_view(), name="geolocate"),
+    path("switch/<slug:vertical>/", switch_vertical, name="switch-vertical"),
     path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

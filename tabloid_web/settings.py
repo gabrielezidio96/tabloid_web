@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'tabloid_web.middleware.VerticalMiddleware',
 ]
 
 ROOT_URLCONF = 'tabloid_web.urls'
@@ -74,6 +75,7 @@ TEMPLATES = [
                 'deals.context_processors.cart',
                 'deals.context_processors.notifications',
                 'deals.context_processors.location',
+                'deals.context_processors.vertical',
             ],
         },
     },

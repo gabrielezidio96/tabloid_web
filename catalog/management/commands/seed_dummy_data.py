@@ -15,6 +15,7 @@ STORES = [
     {
         "name": "SuperMart",
         "slug": "supermart",
+        "vertical": "supermarket",
         "email": "contato@supermart.example.com",
         "telephone_1": "+55 11 3000-1000",
         "telephone_2": "+55 11 3000-1001",
@@ -25,11 +26,23 @@ STORES = [
     {
         "name": "FreshGrocer",
         "slug": "freshgrocer",
+        "vertical": "supermarket",
         "email": "contato@freshgrocer.example.com",
         "telephone_1": "+55 21 3000-2000",
         "telephone_2": None,
         "whatsapp": "+55 21 99999-2000",
         "has_delivery": False,
+        "has_pickup": True,
+    },
+    {
+        "name": "DrogaBem",
+        "slug": "drogabem",
+        "vertical": "pharmacy",
+        "email": "contato@drogabem.example.com",
+        "telephone_1": "+55 11 3000-3000",
+        "telephone_2": None,
+        "whatsapp": "+55 11 99999-3000",
+        "has_delivery": True,
         "has_pickup": True,
     },
 ]
@@ -59,19 +72,34 @@ STORE_ADDRESSES = {
         "country": "Brazil",
         "location": Point(-43.1822, -22.9360, srid=4326),
     },
+    "drogabem": {
+        "address_line_1": "Rua Augusta",
+        "address_line_2": "",
+        "number": "1500",
+        "complement": "",
+        "district": "Consolação",
+        "city": "Sao Paulo",
+        "state": "SP",
+        "zip_code": "01304-001",
+        "country": "Brazil",
+        "location": Point(-46.6489, -23.5566, srid=4326),
+    },
 }
 
 CATEGORIES = [
-    {"name": "Dairy", "slug": "dairy"},
-    {"name": "Bakery", "slug": "bakery"},
-    {"name": "Beverages", "slug": "beverages"},
-    {"name": "Snacks", "slug": "snacks"},
-    {"name": "Produce", "slug": "produce"},
-    {"name": "Meat & Poultry", "slug": "meat-poultry"},
-    {"name": "Frozen", "slug": "frozen"},
-    {"name": "Pantry", "slug": "pantry"},
-    {"name": "Cleaning", "slug": "cleaning"},
-    {"name": "Personal Care", "slug": "personal-care"},
+    {"name": "Dairy", "slug": "dairy", "verticals": ["supermarket"]},
+    {"name": "Bakery", "slug": "bakery", "verticals": ["supermarket"]},
+    {"name": "Beverages", "slug": "beverages", "verticals": ["supermarket"]},
+    {"name": "Snacks", "slug": "snacks", "verticals": ["supermarket"]},
+    {"name": "Produce", "slug": "produce", "verticals": ["supermarket"]},
+    {"name": "Meat & Poultry", "slug": "meat-poultry", "verticals": ["supermarket"]},
+    {"name": "Frozen", "slug": "frozen", "verticals": ["supermarket"]},
+    {"name": "Pantry", "slug": "pantry", "verticals": ["supermarket"]},
+    {"name": "Cleaning", "slug": "cleaning", "verticals": ["supermarket"]},
+    {"name": "Personal Care", "slug": "personal-care", "verticals": ["supermarket", "pharmacy"]},
+    {"name": "Medicamentos", "slug": "medicamentos", "verticals": ["pharmacy"]},
+    {"name": "Vitaminas", "slug": "vitaminas", "verticals": ["pharmacy"]},
+    {"name": "Higiene Pessoal", "slug": "higiene-pessoal", "verticals": ["pharmacy", "supermarket"]},
 ]
 
 PRODUCTS = [
@@ -537,6 +565,90 @@ PRODUCTS = [
         "is_on_sale": True,
         "is_featured": False,
     },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "medicamentos",
+        "name": "Dipirona 500mg 20 comprimidos",
+        "brand": "Neo Quimica",
+        "ean": "7890123456900",
+        "store_product_id": "DB-001",
+        "unit": "20 cp",
+        "regular_price": 999,
+        "sale_price": 699,
+        "discount_pct": "30.03",
+        "is_on_sale": True,
+        "is_featured": True,
+    },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "medicamentos",
+        "name": "Paracetamol 750mg 20 comprimidos",
+        "brand": "Medley",
+        "ean": "7890123456901",
+        "store_product_id": "DB-002",
+        "unit": "20 cp",
+        "regular_price": 1299,
+        "sale_price": 899,
+        "discount_pct": "30.79",
+        "is_on_sale": True,
+        "is_featured": True,
+    },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "vitaminas",
+        "name": "Vitamina C 1g 30 comprimidos",
+        "brand": "Cewin",
+        "ean": "7890123456902",
+        "store_product_id": "DB-003",
+        "unit": "30 cp",
+        "regular_price": 2499,
+        "sale_price": 1899,
+        "discount_pct": "24.01",
+        "is_on_sale": True,
+        "is_featured": True,
+    },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "vitaminas",
+        "name": "Vitamina D 2000UI 60 cápsulas",
+        "brand": "Sundown",
+        "ean": "7890123456903",
+        "store_product_id": "DB-004",
+        "unit": "60 caps",
+        "regular_price": 5999,
+        "sale_price": None,
+        "discount_pct": None,
+        "is_on_sale": False,
+        "is_featured": False,
+    },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "higiene-pessoal",
+        "name": "Sabonete Líquido 250ml",
+        "brand": "Dove",
+        "ean": "7890123456904",
+        "store_product_id": "DB-005",
+        "unit": "250ml",
+        "regular_price": 1899,
+        "sale_price": 1399,
+        "discount_pct": "26.33",
+        "is_on_sale": True,
+        "is_featured": True,
+    },
+    {
+        "store_slug": "drogabem",
+        "category_slug": "higiene-pessoal",
+        "name": "Protetor Solar FPS 60 200ml",
+        "brand": "Sundown",
+        "ean": "7890123456905",
+        "store_product_id": "DB-006",
+        "unit": "200ml",
+        "regular_price": 8999,
+        "sale_price": 6999,
+        "discount_pct": "22.23",
+        "is_on_sale": True,
+        "is_featured": True,
+    },
 ]
 
 
@@ -563,6 +675,7 @@ class Command(BaseCommand):
                 slug=s["slug"],
                 defaults={
                     "name": s["name"],
+                    "vertical": s.get("vertical", "supermarket"),
                     "email": s["email"],
                     "telephone_1": s["telephone_1"],
                     "telephone_2": s["telephone_2"],
@@ -586,12 +699,15 @@ class Command(BaseCommand):
 
         categories = {}
         for c in CATEGORIES:
-            cat, created = Category.objects.get_or_create(
+            cat, created = Category.objects.update_or_create(
                 slug=c["slug"],
-                defaults={"name": c["name"]},
+                defaults={
+                    "name": c["name"],
+                    "verticals": c.get("verticals", ["supermarket"]),
+                },
             )
             categories[c["slug"]] = cat
-            self.stdout.write(f"  {'Created' if created else 'Found'} category: {cat}")
+            self.stdout.write(f"  {'Created' if created else 'Updated'} category: {cat}")
 
         rank_by_store: dict[str, int] = {}
 

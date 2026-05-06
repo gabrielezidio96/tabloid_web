@@ -1,4 +1,14 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
+
+
+class CategoryQuerySet(models.QuerySet):
+    def for_vertical(self, vertical):
+        return self.filter(verticals__contains=[vertical]) if vertical else self
+
+
+class CategoryManager(models.Manager.from_queryset(CategoryQuerySet)):
+    pass
 
 
 class Category(models.Model):
@@ -12,6 +22,13 @@ class Category(models.Model):
         related_name="children",
     )
     image_url = models.URLField(blank=True)
+    verticals = ArrayField(
+        models.CharField(max_length=20),
+        default=list,
+        blank=True,
+    )
+
+    objects = CategoryManager()
 
     class Meta:
         verbose_name_plural = "categories"
@@ -31,6 +48,15 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProductQuerySet(models.QuerySet):
+    def in_vertical(self, vertical):
+        return self.filter(store__vertical=vertical) if vertical else self
+
+
+class ProductManager(models.Manager.from_queryset(ProductQuerySet)):
+    pass
 
 
 class Product(models.Model):
@@ -75,6 +101,8 @@ class Product(models.Model):
     limited_unit = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ProductManager()
 
     class Meta:
         unique_together = [["store", "store_product_id"]]

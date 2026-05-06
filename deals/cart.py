@@ -1,4 +1,5 @@
-CART_SESSION_KEY = "cart"
+CART_SESSION_KEY_PREFIX = "cart"
+DEFAULT_VERTICAL = "supermarket"
 
 PRICE_KEYS = ("priceRegular", "priceDiscounted", "priceApp", "priceCreditCardClub")
 DEFAULT_PRICE_KEY = "priceRegular"
@@ -15,14 +16,15 @@ def _normalize_entry(entry):
 
 
 class Cart:
-    def __init__(self, session):
+    def __init__(self, session, vertical=None):
         self.session = session
-        raw = session.setdefault(CART_SESSION_KEY, {})
+        self.session_key = f"{CART_SESSION_KEY_PREFIX}:{vertical or DEFAULT_VERTICAL}"
+        raw = session.setdefault(self.session_key, {})
         self._items = {k: _normalize_entry(v) for k, v in raw.items()}
-        session[CART_SESSION_KEY] = self._items
+        session[self.session_key] = self._items
 
     def _save(self):
-        self.session[CART_SESSION_KEY] = self._items
+        self.session[self.session_key] = self._items
         self.session.modified = True
 
     def add(self, product_id, qty=1):

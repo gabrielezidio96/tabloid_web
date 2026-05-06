@@ -56,7 +56,7 @@ def _available_prices(snapshot):
     ]
 
 
-def _get_featured(store_slug, state, city, today):
+def _get_featured(store_slug, state, city, today, vertical=None):
     qs = (
         DailyFeatured.objects.filter(date=today)
         .select_related(
@@ -67,6 +67,8 @@ def _get_featured(store_slug, state, city, today):
         )
         .order_by("rank")
     )
+    if vertical:
+        qs = qs.filter(store__vertical=vertical)
     if store_slug:
         qs = qs.filter(store__slug=store_slug)
     if state:
@@ -84,7 +86,7 @@ _SORT_ORDERS = {
 }
 
 
-def _get_products(store_slug, state, city, today, sort="featured"):
+def _get_products(store_slug, state, city, today, sort="featured", vertical=None):
     order = _SORT_ORDERS.get(sort, _SORT_ORDERS["featured"])
     today_snapshots = PriceSnapshot.objects.filter(date=today)
     qs = (
@@ -96,6 +98,8 @@ def _get_products(store_slug, state, city, today, sort="featured"):
         .distinct()
         .order_by(*order)
     )
+    if vertical:
+        qs = qs.filter(store__vertical=vertical)
     if store_slug:
         qs = qs.filter(store__slug=store_slug)
     if state:
@@ -105,11 +109,14 @@ def _get_products(store_slug, state, city, today, sort="featured"):
     return qs
 
 
-def _build_location_filters(selected_state):
+def _build_location_filters(selected_state, vertical=None):
+    addresses_qs = StoreAddress.objects.all()
+    if vertical:
+        addresses_qs = addresses_qs.filter(store__vertical=vertical)
     states = list(
-        StoreAddress.objects.order_by("state").values_list("state", flat=True).distinct()
+        addresses_qs.order_by("state").values_list("state", flat=True).distinct()
     )
-    addresses = StoreAddress.objects.values("state", "city").order_by("state", "city").distinct()
+    addresses = addresses_qs.values("state", "city").order_by("state", "city").distinct()
     cities_by_state = defaultdict(list)
     for address in addresses:
         cities_by_state[address["state"]].append(address["city"])
@@ -265,11 +272,14 @@ def _build_post_row(post, user_vote):
 
 
 def _get_home_post_rows(request, store_slug, state, city, sort="featured"):
+    vertical = getattr(request, "vertical", None)
     qs = (
         Post.objects.filter(is_active=True)
         .select_related("product__brand", "store")
         .prefetch_related("prices")
     )
+    if vertical:
+        qs = qs.filter(store__vertical=vertical)
     if store_slug:
         qs = qs.filter(store__slug=store_slug)
     if state:
@@ -304,17 +314,18 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        vertical = getattr(self.request, "vertical", None)
         store_slug = self.request.GET.get("store", "")
         selected_state = _resolve_filter(self.request, "state", STATE_COOKIE)
         selected_city = _resolve_filter(self.request, "city", CITY_COOKIE)
         sort = self.request.GET.get("sort", "featured")
         if sort not in VALID_SORTS:
             sort = "featured"
-        states, cities, cities_by_state = _build_location_filters(selected_state)
+        states, cities, cities_by_state = _build_location_filters(selected_state, vertical)
         if selected_city and selected_city not in cities:
             selected_city = ""
 
-        ctx["stores"] = Store.objects.filter(is_active=True)
+        ctx["stores"] = Store.objects.active_in_vertical(vertical)
         ctx["post_rows"] = _get_home_post_rows(
             self.request, store_slug, selected_state, selected_city, sort
         )
@@ -359,10 +370,13 @@ class ProductGridView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         today = timezone.localdate()
+        vertical = getattr(self.request, "vertical", None)
         store_slug = self.request.GET.get("store", "")
         selected_state = self.request.GET.get("state", "")
         selected_city = self.request.GET.get("city", "")
-        ctx["featured"] = _get_featured(store_slug, selected_state, selected_city, today)
+        ctx["featured"] = _get_featured(
+            store_slug, selected_state, selected_city, today, vertical
+        )
         ctx["selected_store"] = store_slug
         return ctx
 
@@ -373,7 +387,10 @@ class ProductDetailView(DetailView):
     context_object_name = "product"
 
     def get_queryset(self):
-        return Product.objects.select_related("store", "brand", "category")
+        return (
+            Product.objects.in_vertical(getattr(self.request, "vertical", None))
+            .select_related("store", "brand", "category")
+        )
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -480,7 +497,7 @@ class CartView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        cart = Cart(self.request.session)
+        cart = Cart(self.request.session, getattr(self.request, "vertical", None))
         rows, total = _build_cart_rows(cart)
         ctx["rows"] = rows
         ctx["total"] = total
@@ -497,7 +514,7 @@ def cart_add(request, pk):
     except (TypeError, ValueError):
         qty = 1
     qty = max(1, qty)
-    Cart(request.session).add(product.id, qty)
+    Cart(request.session, getattr(request, "vertical", None)).add(product.id, qty)
     return redirect(_safe_next(request, reverse("deals:cart")))
 
 
@@ -508,26 +525,26 @@ def cart_update(request, pk):
         qty = int(request.POST.get("qty", 0))
     except (TypeError, ValueError):
         qty = 0
-    Cart(request.session).set_qty(pk, qty)
+    Cart(request.session, getattr(request, "vertical", None)).set_qty(pk, qty)
     return redirect(_safe_next(request, reverse("deals:cart")))
 
 
 @require_POST
 def cart_remove(request, pk):
-    Cart(request.session).remove(pk)
+    Cart(request.session, getattr(request, "vertical", None)).remove(pk)
     return redirect(_safe_next(request, reverse("deals:cart")))
 
 
 @require_POST
 def cart_clear(request):
-    Cart(request.session).clear()
+    Cart(request.session, getattr(request, "vertical", None)).clear()
     return redirect(reverse("deals:cart"))
 
 
 @require_POST
 def cart_set_price(request, pk):
     price_key = request.POST.get("price_key", DEFAULT_PRICE_KEY)
-    Cart(request.session).set_price_key(pk, price_key)
+    Cart(request.session, getattr(request, "vertical", None)).set_price_key(pk, price_key)
     return redirect(_safe_next(request, reverse("deals:cart")))
 
 
@@ -535,7 +552,7 @@ def cart_set_price(request, pk):
 def cart_save(request):
     if not request.user.is_authenticated:
         return redirect(reverse("deals:cart"))
-    cart = Cart(request.session)
+    cart = Cart(request.session, getattr(request, "vertical", None))
     rows, _ = _build_cart_rows(cart)
     if not rows:
         return redirect(reverse("deals:cart"))
@@ -664,8 +681,11 @@ def saved_list_delete(request, pk):
 @login_required
 def saved_list_load(request, pk):
     saved = get_object_or_404(SavedList, user=request.user, pk=pk)
-    cart = Cart(request.session)
+    vertical = getattr(request, "vertical", None)
+    cart = Cart(request.session, vertical)
     for item in saved.items.all():
+        if vertical and item.product.store.vertical != vertical:
+            continue
         cart.add(item.product_id, item.quantity)
         cart.set_price_key(item.product_id, item.selected_price_key)
     return redirect(reverse("deals:cart"))
@@ -676,7 +696,9 @@ class StoreListView(ListView):
     context_object_name = "stores"
 
     def get_queryset(self):
-        return Store.objects.filter(is_active=True).order_by("name")
+        return Store.objects.active_in_vertical(
+            getattr(self.request, "vertical", None)
+        ).order_by("name")
 
 
 class StoreDetailView(DetailView):
@@ -685,6 +707,9 @@ class StoreDetailView(DetailView):
     context_object_name = "store"
     slug_field = "slug"
     slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return Store.objects.in_vertical(getattr(self.request, "vertical", None))
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -720,13 +745,15 @@ class PostListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        vertical = getattr(self.request, "vertical", None)
         sort = self.request.GET.get("sort", "featured")
         if sort not in VALID_POST_SORTS:
             sort = "featured"
         store_slug = self.request.GET.get("store", "")
 
         qs = (
-            Post.objects.filter(is_active=True)
+            Post.objects.in_vertical(vertical)
+            .filter(is_active=True)
             .select_related("product__brand", "store")
             .prefetch_related("prices")
         )
@@ -750,7 +777,7 @@ class PostListView(TemplateView):
 
         ctx["rows"] = [_build_post_row(post, vote_map.get(post.pk)) for post in posts]
         ctx["selected_sort"] = sort
-        ctx["stores"] = Store.objects.filter(is_active=True)
+        ctx["stores"] = Store.objects.active_in_vertical(vertical)
         ctx["selected_store"] = store_slug
         return ctx
 
@@ -762,7 +789,8 @@ class PostDetailView(DetailView):
 
     def get_queryset(self):
         return (
-            Post.objects.filter(is_active=True)
+            Post.objects.in_vertical(getattr(self.request, "vertical", None))
+            .filter(is_active=True)
             .select_related("product__brand", "product__category", "store")
             .prefetch_related("prices")
         )
@@ -779,11 +807,13 @@ class CategoryListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        categories = list(Category.objects.all())
+        vertical = getattr(self.request, "vertical", None)
+        categories = list(Category.objects.for_vertical(vertical))
+        product_filter = {"store__vertical": vertical} if vertical else {}
         ctx["categories"] = [
             {
                 "category": cat,
-                "product_count": cat.products.count(),
+                "product_count": cat.products.filter(**product_filter).count(),
                 "href": reverse("deals:category-detail", kwargs={"slug": cat.slug}),
             }
             for cat in categories
@@ -796,13 +826,17 @@ class CategoryDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        category = get_object_or_404(Category, slug=self.kwargs["slug"])
+        vertical = getattr(self.request, "vertical", None)
+        category = get_object_or_404(
+            Category.objects.for_vertical(vertical), slug=self.kwargs["slug"]
+        )
         sort = self.request.GET.get("sort", "featured")
         if sort not in VALID_POST_SORTS:
             sort = "featured"
 
         qs = (
-            Post.objects.filter(is_active=True, product__category=category)
+            Post.objects.in_vertical(vertical)
+            .filter(is_active=True, product__category=category)
             .select_related("product__brand", "store")
             .prefetch_related("prices")
         )

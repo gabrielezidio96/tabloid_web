@@ -2,6 +2,15 @@ from django.conf import settings
 from django.db import models
 
 
+class PostQuerySet(models.QuerySet):
+    def in_vertical(self, vertical):
+        return self.filter(store__vertical=vertical) if vertical else self
+
+
+class PostManager(models.Manager.from_queryset(PostQuerySet)):
+    pass
+
+
 class Post(models.Model):
     product = models.ForeignKey(
         "catalog.Product",
@@ -18,6 +27,8 @@ class Post(models.Model):
     expires_at = models.DateField(null=True, blank=True)
     limited_unit = models.PositiveIntegerField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+
+    objects = PostManager()
 
     class Meta:
         ordering = ["-posted_at"]

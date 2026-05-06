@@ -11,14 +11,14 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["name", "slug", "parent"]
+    list_display = ["name", "slug", "parent", "verticals"]
     prepopulated_fields = {"slug": ["name"]}
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ["name", "store", "brand", "ean", "store_product_id", "created_at"]
-    list_filter = ["store", "category"]
+    list_filter = ["store__vertical", "store", "category"]
     search_fields = ["name", "brand__name", "ean"]
     raw_id_fields = ["store", "category", "brand"]
 
