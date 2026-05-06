@@ -27,14 +27,14 @@ class Cart:
         self.session[self.session_key] = self._items
         self.session.modified = True
 
-    def add(self, product_id, qty=1):
+    def add(self, product_id, qty=1, price_key=None):
         key = str(product_id)
         existing = self._items.get(key, {"qty": 0, "price_key": DEFAULT_PRICE_KEY})
         new_qty = existing["qty"] + qty
         if new_qty <= 0:
             self._items.pop(key, None)
         else:
-            self._items[key] = {"qty": new_qty, "price_key": existing["price_key"]}
+            self._items[key] = {"qty": new_qty, "price_key": price_key or existing["price_key"]}
         self._save()
 
     def set_qty(self, product_id, qty):

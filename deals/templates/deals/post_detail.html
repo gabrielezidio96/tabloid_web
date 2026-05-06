@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n static %}
 
 {% block title %}{{ product.name }} — Tabloid{% endblock %}
 
@@ -86,6 +86,7 @@
             {% for pr in price_rows %}
             <div class="price-row relative bg-white rounded-2xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none"
               data-price="{{ pr.amount|localize }}"
+              data-price-amount="{{ pr.amount|unlocalize }}"
               data-label="{{ pr.label }}"
               data-color="{{ pr.icon_color }}"
               data-best="{{ pr.is_best|yesno:'true,false' }}"
@@ -145,12 +146,12 @@
             <input type="hidden" name="next" value="{% url 'deals:cart' %}">
             
             <div class="flex items-center gap-1 bg-gray-50 rounded-2xl px-1.5 py-1.5 border border-gray-200 shrink-0">
-              <button type="button" onclick="var i=this.nextElementSibling;i.value=Math.max(1,parseInt(i.value||'1')-1)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white shadow-sm border border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer">
+              <button type="button" class="qty-dec w-9 h-9 flex items-center justify-center rounded-xl bg-white shadow-sm border border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer">
                 <i class="fa-solid fa-minus text-[10px]" aria-hidden="true"></i>
               </button>
               <input type="number" name="qty" value="1" min="1"
                 class="text-sm font-bold w-8 text-center bg-transparent border-0 focus:outline-none text-gray-900 px-0">
-              <button type="button" onclick="var i=this.previousElementSibling;i.value=parseInt(i.value||'1')+1" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white shadow-sm border border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer">
+              <button type="button" class="qty-inc w-9 h-9 flex items-center justify-center rounded-xl bg-white shadow-sm border border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer">
                 <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
               </button>
             </div>
@@ -169,31 +170,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-(function () {
-  const rows = document.querySelectorAll('.price-row');
-  const btnText = document.getElementById('add-btn-text');
-  if (!rows.length) return;
-
-  function select(row) {
-    rows.forEach(r => {
-      r.querySelector('.price-check').classList.add('hidden');
-      r.style.outline = '';
-      r.style.outlineOffset = '';
-    });
-    row.querySelector('.price-check').classList.remove('hidden');
-    const color = row.dataset.color;
-    row.style.outline = `2.5px solid ${color}`;
-    row.style.outlineOffset = '2px';
-    if (btnText) {
-      btnText.textContent = `Adicionar — R$ ${row.dataset.price}`;
-    }
-  }
-
-  rows.forEach(row => row.addEventListener('click', () => select(row)));
-
-  const best = document.querySelector('.price-row[data-best="true"]');
-  select(best || rows[0]);
-})();
-</script>
+<script src="{% static 'js/post-detail.js' %}"></script>
 {% endblock %}

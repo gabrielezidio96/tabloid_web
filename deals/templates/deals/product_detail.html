@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n static %}
 
 {% block title %}{{ product.name }} — Tabloid{% endblock %}
 
@@ -42,7 +42,10 @@
       <div class="flex flex-col gap-3">
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Preços disponíveis</span>
         {% for row in price_rows %}
-        <div class="bg-white rounded-2xl"
+        <div class="bg-white rounded-2xl cursor-pointer transition-all price-row"
+          data-price-key="{{ row.price_key }}"
+          data-price-amount="{{ row.value|unlocalize }}"
+          data-is-best="{{ row.is_best|yesno:'true,false' }}"
           style="{% if row.is_best %}border: 1.5px solid {{ row.accent_color }}; box-shadow: 0 4px 16px {{ row.icon_color }}2e;{% else %}box-shadow: 0 4px 8px rgba(0,0,0,0.06);{% endif %}">
           <div class="flex items-center justify-between px-4 py-3.5">
             <div class="flex items-center gap-3">
@@ -84,24 +87,27 @@
     <form method="post" action="{% url 'deals:cart-add' product.pk %}" class="flex items-center gap-3 flex-1">
       {% csrf_token %}
       <input type="hidden" name="next" value="{% url 'deals:cart' %}">
+      <input type="hidden" name="price_key" id="selected-price-key" value="priceRegular">
       <div class="flex items-center gap-3 bg-gray-100 rounded-xl px-3 py-3">
-        <button type="button" onclick="var i=this.nextElementSibling;i.value=Math.max(1,parseInt(i.value||'1')-1)"
-          class="cursor-pointer">
+        <button type="button" class="qty-dec cursor-pointer">
           <i class="fa-solid fa-minus text-gray-700 text-[10px]" aria-hidden="true"></i>
         </button>
-        <input type="number" name="qty" value="1" min="1"
+        <input type="number" name="qty" id="qty-input" value="1" min="1"
           class="text-sm font-bold w-12 text-center bg-transparent border-0 focus:outline-none">
-        <button type="button" onclick="var i=this.previousElementSibling;i.value=parseInt(i.value||'1')+1"
-          class="cursor-pointer">
+        <button type="button" class="qty-inc cursor-pointer">
           <i class="fa-solid fa-plus text-gray-700 text-[10px]" aria-hidden="true"></i>
         </button>
       </div>
       <button type="submit"
         class="flex-1 rounded-2xl py-4 bg-gray-900 text-white text-base font-bold flex items-center justify-center gap-2 cursor-pointer px-4 overflow-hidden">
         <i class="fa-solid fa-cart-shopping text-sm shrink-0" aria-hidden="true"></i>
-        <span class="whitespace-nowrap truncate">Adicionar a Lista</span>
+        <span id="btn-label" class="whitespace-nowrap truncate">Adicionar a Lista</span>
       </button>
     </form>
   </div>
 </div>
+
+{% block extra_scripts %}
+<script src="{% static 'js/product-detail.js' %}"></script>
+{% endblock %}
 {% endblock %}

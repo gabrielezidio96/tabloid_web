@@ -402,6 +402,12 @@ class ProductDetailView(DetailView):
         return ctx
 
     def _build_price_rows(self, snapshot):
+        _price_key_map = {
+            "regular": "priceRegular",
+            "discounted": "priceDiscounted",
+            "app": "priceApp",
+            "club": "priceCreditCardClub",
+        }
         configs = [
             ("regular", "Preço normal", "tag", "#9ca3af", "#e5e7eb", snapshot.regular_price),
             ("discounted", "Oferta", "percent", "#ef4444", "#fca5a5", snapshot.sale_price),
@@ -414,6 +420,7 @@ class ProductDetailView(DetailView):
                 continue
             rows.append({
                 "id": row_id,
+                "price_key": _price_key_map[row_id],
                 "label": label,
                 "icon": icon,
                 "icon_color": icon_color,
@@ -514,7 +521,10 @@ def cart_add(request, pk):
     except (TypeError, ValueError):
         qty = 1
     qty = max(1, qty)
-    Cart(request.session, getattr(request, "vertical", None)).add(product.id, qty)
+    price_key = request.POST.get("price_key", DEFAULT_PRICE_KEY)
+    if price_key not in PRICE_KEYS:
+        price_key = DEFAULT_PRICE_KEY
+    Cart(request.session, getattr(request, "vertical", None)).add(product.id, qty, price_key)
     return redirect(_safe_next(request, reverse("deals:cart")))
 
 
