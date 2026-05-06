@@ -68,17 +68,24 @@ def oauth_callback(request):
         messages.error(request, "Provedor não retornou e-mail.")
         return redirect("accounts:login")
 
+    sb_id = sb_user.get("id", "")
     metadata = sb_user.get("user_metadata") or {}
     full_name = metadata.get("full_name") or metadata.get("name") or ""
     first_name, _, last_name = full_name.partition(" ")
 
     User = get_user_model()
+    app_metadata = sb_user.get("app_metadata") or {}
+    raw_role = app_metadata.get("role", "")
+    role = raw_role if raw_role in User.Type.values else User.Type.STORE
+
     user, _ = User.objects.update_or_create(
-        username=email,
+        supabase_id=sb_id,
         defaults={
+            "username": email,
             "email": email,
             "first_name": first_name[:150],
             "last_name": last_name[:150],
+            "type": role,
         },
     )
     auth.login(request, user)

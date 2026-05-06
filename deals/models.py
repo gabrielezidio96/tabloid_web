@@ -12,10 +12,6 @@ class PostManager(models.Manager.from_queryset(PostQuerySet)):
 
 
 class Post(models.Model):
-    class Source(models.TextChoices):
-        STORE = "store", "Loja verificada"
-        FLYER = "flyer", "Folheto extraído"
-
     product = models.ForeignKey(
         "catalog.Product",
         on_delete=models.CASCADE,
@@ -26,7 +22,13 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name="posts",
     )
-    source = models.CharField(max_length=20, choices=Source.choices, default=Source.STORE)
+    posted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts",
+    )
     temperature = models.IntegerField(default=0)
     posted_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateField(null=True, blank=True)
@@ -34,6 +36,13 @@ class Post(models.Model):
     is_active = models.BooleanField(default=True)
 
     objects = PostManager()
+
+    @property
+    def source(self):
+        from accounts.models import User
+        if self.posted_by_id is None:
+            return User.Type.STORE
+        return self.posted_by.type
 
     class Meta:
         ordering = ["-posted_at"]
